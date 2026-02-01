@@ -5,8 +5,7 @@ import PanelControl from "./components/PanelControl"
 import { Routes, Route } from "react-router-dom"
 import PaginaVotacion from "./pages/PaginaVotacion"
 import AdminQR from "./pages/AdminQR"
-
-
+import AdminPanel from "./pages/AdminPanel"
 
 function App() {
   const [asistentes, setAsistentes] = useState([])
@@ -82,6 +81,16 @@ function App() {
 
       <Routes>
         <Route path="/admin" element={<AdminQR />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminPanel
+              asistentes={asistentes}
+              totalCoeficiente={totalCoeficiente}
+              votosPorPregunta={votosPorPregunta}
+            />
+          }
+        />
         <Route
           path="/votacion/:id"
           element={
