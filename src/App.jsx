@@ -93,23 +93,27 @@ function App() {
       />
 
       <Routes>
-        <Route path="/admin" element={
-          <AdminPanel
-            asistentes={asistentes}
-            totalCoeficiente={totalCoeficiente}
-            votosPorPregunta={votosPorPregunta}
-          />
-        } />
-
+        <Route
+          path="/admin"
+          element={
+            <AdminPanel
+              asistentes={asistentes}
+              totalCoeficiente={totalCoeficiente}
+              votosPorPregunta={votosPorPregunta}
+            />
+          }
+        />
         <Route path="/admin/qr" element={<AdminQR />} />
-
-        <Route path="/votacion/:id" element={
-          <PaginaVotacion
-            onVotar={registrarVoto}
-            votos={votosPorPregunta}
-            totalCoeficiente={totalCoeficiente}
-          />
-        } />
+        <Route
+          path="/votacion/:id"
+          element={
+            <PaginaVotacion
+              onVotar={registrarVoto}
+              votos={votosPorPregunta}
+              totalCoeficiente={totalCoeficiente}
+            />
+          }
+        />
       </Routes>
     </div>
   )

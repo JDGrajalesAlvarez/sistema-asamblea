@@ -46,9 +46,7 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorPregunta }) {
                     <div key={id} style={{ marginBottom: "15px" }}>
 
                         <Link to="/admin/qr">
-                            <button style={{ marginBottom: "15px" }}>
-                                📱 Ver QR de votaciones
-                            </button>
+                            <button>Ver códigos QR</button>
                         </Link>
 
                         <h3>Pregunta {id}</h3>

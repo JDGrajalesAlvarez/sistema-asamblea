@@ -6,10 +6,9 @@ function AdminQR() {
         <div style={{ padding: "20px" }}>
 
             <Link to="/admin">
-                <button style={{ marginBottom: "15px" }}>
-                    ⬅ Volver al panel
-                </button>
+                <button>⬅ Volver al panel</button>
             </Link>
+
 
             <h1>Panel de QRs de la Asamblea</h1>
 
