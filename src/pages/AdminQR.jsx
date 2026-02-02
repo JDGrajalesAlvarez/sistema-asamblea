@@ -1,4 +1,5 @@
 import GeneradorQR from "../components/GeneradorQR"
+import { Link } from "react-router-dom"
 
 function AdminQR() {
     return (
