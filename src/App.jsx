@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { apartamentos } from "./data/apartamentos"
 import RegistroAsistencia from "./components/RegistroAsistencia"
 import PanelControl from "./components/PanelControl"
@@ -6,6 +6,8 @@ import { Routes, Route } from "react-router-dom"
 import PaginaVotacion from "./pages/PaginaVotacion"
 import AdminQR from "./pages/AdminQR"
 import AdminPanel from "./pages/AdminPanel"
+import { db } from "./firebase"
+import { collection, addDoc, onSnapshot } from "firebase/firestore"
 
 function App() {
   const [asistentes, setAsistentes] = useState([])
@@ -13,6 +15,21 @@ function App() {
   const [totalCoeficiente, setTotalCoeficiente] = useState(0)
   const [votosPorPregunta, setVotosPorPregunta] = useState({})
   const [votantesPorPregunta, setVotantesPorPregunta] = useState({})
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) => {
+      const lista = snapshot.docs.map(doc => doc.data())
+      setAsistentes(lista)
+
+      const totalPers = lista.length
+      const totalCoef = lista.reduce((acc, a) => acc + a.coeficiente, 0)
+
+      setTotalPersonas(totalPers)
+      setTotalCoeficiente(totalCoef)
+    })
+
+    return () => unsub()
+  }, [])
 
   const registrarVoto = (preguntaId, apto, opcion) => {
     const asistente = asistentes.find(a => a.apto == apto)
@@ -44,7 +61,7 @@ function App() {
     }))
   }
 
-  const registrarAsistente = (nombre, apto) => {
+  const registrarAsistente = async (nombre, apto) => {
     const aptoData = apartamentos[apto]
 
     if (!aptoData) {
@@ -57,15 +74,11 @@ function App() {
       return
     }
 
-    const nuevo = {
+    await addDoc(collection(db, "asistentes"), {
       nombre,
       apto,
       coeficiente: aptoData.coeficiente
-    }
-
-    setAsistentes([...asistentes, nuevo])
-    setTotalPersonas(prev => prev + 1)
-    setTotalCoeficiente(prev => prev + aptoData.coeficiente)
+    })
   }
 
   return (
@@ -80,27 +93,23 @@ function App() {
       />
 
       <Routes>
-        <Route path="/admin" element={<AdminQR />} />
-        <Route
-          path="/admin"
-          element={
-            <AdminPanel
-              asistentes={asistentes}
-              totalCoeficiente={totalCoeficiente}
-              votosPorPregunta={votosPorPregunta}
-            />
-          }
-        />
-        <Route
-          path="/votacion/:id"
-          element={
-            <PaginaVotacion
-              onVotar={registrarVoto}
-              votos={votosPorPregunta}
-              totalCoeficiente={totalCoeficiente}
-            />
-          }
-        />
+        <Route path="/admin" element={
+          <AdminPanel
+            asistentes={asistentes}
+            totalCoeficiente={totalCoeficiente}
+            votosPorPregunta={votosPorPregunta}
+          />
+        } />
+
+        <Route path="/admin/qr" element={<AdminQR />} />
+
+        <Route path="/votacion/:id" element={
+          <PaginaVotacion
+            onVotar={registrarVoto}
+            votos={votosPorPregunta}
+            totalCoeficiente={totalCoeficiente}
+          />
+        } />
       </Routes>
     </div>
   )
