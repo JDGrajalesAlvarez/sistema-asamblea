@@ -38,16 +38,15 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorPregunta }) {
             <hr />
 
             <h2>🗳️ Resultados por Pregunta</h2>
+            <Link to="/admin/qr">
+                <button>Ver códigos QR</button>
+            </Link>
             {Object.entries(votosPorPregunta).map(([id, votos]) => {
                 const total = votos.si + votos.no + votos.abstencion
                 const pct = v => total > 0 ? ((v / total) * 100).toFixed(1) : 0
 
                 return (
                     <div key={id} style={{ marginBottom: "15px" }}>
-
-                        <Link to="/admin/qr">
-                            <button>Ver códigos QR</button>
-                        </Link>
 
                         <h3>Pregunta {id}</h3>
                         <p>✅ Sí: {pct(votos.si)}%</p>
