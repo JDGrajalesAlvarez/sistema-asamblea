@@ -44,7 +44,13 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorPregunta }) {
 
                 return (
                     <div key={id} style={{ marginBottom: "15px" }}>
-                        <Link to="/admin/qr"><button>📱 Ver QR de votaciones</button> </Link>
+
+                        <Link to="/admin/qr">
+                            <button style={{ marginBottom: "15px" }}>
+                                📱 Ver QR de votaciones
+                            </button>
+                        </Link>
+
                         <h3>Pregunta {id}</h3>
                         <p>✅ Sí: {pct(votos.si)}%</p>
                         <p>❌ No: {pct(votos.no)}%</p>
