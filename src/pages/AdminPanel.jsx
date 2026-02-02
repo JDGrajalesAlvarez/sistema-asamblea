@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 function AdminPanel({ asistentes, totalCoeficiente, votosPorPregunta }) {
     const puedeIniciar = totalCoeficiente >= 50
     const puedeEspecial = totalCoeficiente >= 70
@@ -46,7 +48,11 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorPregunta }) {
                         <p>✅ Sí: {pct(votos.si)}%</p>
                         <p>❌ No: {pct(votos.no)}%</p>
                         <p>⚪ Abstención: {pct(votos.abstencion)}%</p>
+                        <Link to="/admin/qr">
+                            <button>📱 Ver QR de votaciones</button>
+                        </Link>
                     </div>
+
                 )
             })}
         </div>
