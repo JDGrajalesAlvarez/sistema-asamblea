@@ -43,15 +43,13 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorPregunta }) {
                 const pct = v => total > 0 ? ((v / total) * 100).toFixed(1) : 0
 
                 return (
-                    <Link to="/admin/qr">
-                        <button>📱 Ver QR de votaciones</button>
-                        <div key={id} style={{ marginBottom: "15px" }}>
-                            <h3>Pregunta {id}</h3>
-                            <p>✅ Sí: {pct(votos.si)}%</p>
-                            <p>❌ No: {pct(votos.no)}%</p>
-                            <p>⚪ Abstención: {pct(votos.abstencion)}%</p>
-                        </div>
-                    </Link>
+                    <div key={id} style={{ marginBottom: "15px" }}>
+                        <Link to="/admin/qr"><button>📱 Ver QR de votaciones</button> </Link>
+                        <h3>Pregunta {id}</h3>
+                        <p>✅ Sí: {pct(votos.si)}%</p>
+                        <p>❌ No: {pct(votos.no)}%</p>
+                        <p>⚪ Abstención: {pct(votos.abstencion)}%</p>
+                    </div>
                 )
             })}
         </div>
