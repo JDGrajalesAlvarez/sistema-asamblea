@@ -5,15 +5,15 @@ function RegistroAsistencia({ onRegistrar }) {
     const [nombre, setNombre] = useState("")
     const [apto, setApto] = useState("")
     const navigate = useNavigate()
-    const handleSubmit = async (e) => {
-        e.preventDefault()
 
-        const ok = await onRegistrar(nombre, apto)
-        if (ok) {
-            navigate("/votacion", { replace: true })
-            return
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const exito = await onRegistrar(nombre, apto);
+        console.log("¿Registro exitoso?", exito);
+        if (exito) {
+            navigate("/votacion");
         }
-    }
+    };
 
     return (
         <div>

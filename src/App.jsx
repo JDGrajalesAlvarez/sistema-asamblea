@@ -2,24 +2,31 @@ import { useState, useEffect } from "react"
 import { apartamentos } from "./data/apartamentos"
 import RegistroAsistencia from "./components/RegistroAsistencia"
 import PanelControl from "./components/PanelControl"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, Navigate } from "react-router-dom"
 import PaginaVotacion from "./pages/PaginaVotacion"
 import AdminQR from "./pages/AdminQR"
 import AdminPanel from "./pages/AdminPanel"
 import { db } from "./firebase"
 import { collection, addDoc, onSnapshot } from "firebase/firestore"
 import PantallaVotacion from "./pages/PantallaVotacion"
-import { Navigate } from "react-router-dom"
-
 
 function App() {
-  const [aptoSesion, setAptoSesion] = useState(() => localStorage.getItem("apto"))
+  const [aptoSesion, setAptoSesion] = useState(null)
   const [asistentes, setAsistentes] = useState([])
   const [totalPersonas, setTotalPersonas] = useState(0)
   const [totalCoeficiente, setTotalCoeficiente] = useState(0)
   const [votosPorPregunta, setVotosPorPregunta] = useState({})
   const [votantesPorPregunta, setVotantesPorPregunta] = useState({})
 
+  // 🔥 SINCRONIZA SESIÓN AL CARGAR LA APP
+  useEffect(() => {
+    const aptoGuardado = localStorage.getItem("apto")
+    if (aptoGuardado) {
+      setAptoSesion(aptoGuardado)
+    }
+  }, [])
+
+  // 🔥 ESCUCHA ASISTENTES EN TIEMPO REAL
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) => {
       const lista = snapshot.docs.map(doc => doc.data())
@@ -38,6 +45,7 @@ function App() {
   const registrarVoto = (preguntaId, apto, opcion) => {
     const aptoNumero = Number(apto)
     const asistente = asistentes.find(a => a.apto === aptoNumero)
+
     if (!asistente) {
       alert("Este apartamento no registró asistencia")
       return
@@ -66,35 +74,80 @@ function App() {
     }))
   }
 
+  // const registrarAsistente = async (nombre, apto) => {
+  //   try {
+  //     const aptoNumero = Number(apto)
+  //     const aptoData = apartamentos[aptoNumero]
+
+  //     if (!aptoData) {
+  //       alert("Apartamento no válido")
+  //       return false
+  //     }
+
+  //     if (asistentes.some(a => a.apto === aptoNumero)) {
+  //       alert("Este apartamento ya fue registrado")
+  //       return false
+  //     }
+
+  //     await addDoc(collection(db, "asistentes"), {
+  //       nombre,
+  //       apto: aptoNumero,
+  //       coeficiente: aptoData.coeficiente
+  //     });
+
+  //     // 🔥 GUARDA SESIÓN
+  //     localStorage.setItem("apto", String(aptoNumero));
+  //     setAptoSesion(String(aptoNumero));
+
+  //     return true;
+
+  //   } catch (error) {
+  //     console.error("❌ Error registrando asistente:", error)
+  //     alert("Error conectando con la base de datos")
+  //     return false
+  //   }
+  // }
+
   const registrarAsistente = async (nombre, apto) => {
-    const aptoNumero = Number(apto)
-    const aptoData = apartamentos[aptoNumero]
+    try {
+      const aptoNumero = Number(apto);
+      const aptoData = apartamentos[aptoNumero];
 
-    if (!aptoData) {
-      alert("Apartamento no válido")
-      return false
+      if (!aptoData) {
+        alert("Apartamento no válido");
+        return false;
+      }
+
+      console.log("1. Intentando guardar en Firebase...");
+
+      // Si la app se queda aquí y no pasa al paso 2, son las reglas de Firebase o conexión
+      await addDoc(collection(db, "asistentes"), {
+        nombre,
+        apto: aptoNumero,
+        coeficiente: aptoData.coeficiente,
+        fecha: new Date()
+      });
+
+      console.log("2. Guardado en Firebase con éxito");
+
+      localStorage.setItem("apto", String(aptoNumero));
+      setAptoSesion(String(aptoNumero));
+
+      console.log("3. LocalStorage actualizado:", localStorage.getItem("apto"));
+
+      return true;
+
+    } catch (error) {
+      console.error("❌ Error real de Firebase:", error.code, error.message);
+      alert("Error de conexión: " + error.message);
+      return false;
     }
-
-    if (asistentes.some(a => a.apto === aptoNumero)) {
-      alert("Este apartamento ya fue registrado")
-      return false
-    }
-
-    await addDoc(collection(db, "asistentes"), {
-      nombre,
-      apto: aptoNumero,
-      coeficiente: aptoData.coeficiente
-    })
-
-    localStorage.setItem("apto", String(aptoNumero))
-    setAptoSesion(String(aptoNumero)) // 🔥 ESTO DISPARA EL RE-RENDER
-    return true
-
   }
 
   return (
     <div style={{ padding: "20px" }}>
       <Routes>
+
         {/* 🏠 Página principal */}
         <Route
           path="/"
@@ -125,9 +178,11 @@ function App() {
             />
           }
         />
+
         {/* 🔳 QRs */}
         <Route path="/admin/qr" element={<AdminQR />} />
-        {/* 🗳 Votación */}
+
+        {/* 🗳 Votación de preguntas */}
         <Route
           path="/votacion/:id"
           element={
@@ -138,14 +193,17 @@ function App() {
             />
           }
         />
+
+        {/* 🧍 Pantalla de espera */}
         <Route
           path="/votacion"
           element={
-            localStorage.getItem("apto")
+            aptoSesion
               ? <PantallaVotacion />
               : <Navigate to="/" replace />
           }
         />
+
       </Routes>
     </div>
   )
