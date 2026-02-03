@@ -5,20 +5,14 @@ function RegistroAsistencia({ onRegistrar }) {
     const [nombre, setNombre] = useState("")
     const [apto, setApto] = useState("")
     const navigate = useNavigate()
-
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        const registrado = await onRegistrar(nombre, apto)
-
-        // Si el registro fue exitoso
-        if (registrado) {
-            localStorage.setItem("apto", apto) // 🔥 Guardamos sesión
-            navigate("/votacion") // 🔥 Lo mandamos a la votación
+        const ok = await onRegistrar(nombre, apto)
+        if (ok) {
+            navigate("/votacion", { replace: true })
+            return
         }
-
-        setNombre("")
-        setApto("")
     }
 
     return (

@@ -9,9 +9,11 @@ import AdminPanel from "./pages/AdminPanel"
 import { db } from "./firebase"
 import { collection, addDoc, onSnapshot } from "firebase/firestore"
 import PantallaVotacion from "./pages/PantallaVotacion"
+import { Navigate } from "react-router-dom"
 
 
 function App() {
+  const [aptoSesion, setAptoSesion] = useState(() => localStorage.getItem("apto"))
   const [asistentes, setAsistentes] = useState([])
   const [totalPersonas, setTotalPersonas] = useState(0)
   const [totalCoeficiente, setTotalCoeficiente] = useState(0)
@@ -34,13 +36,14 @@ function App() {
   }, [])
 
   const registrarVoto = (preguntaId, apto, opcion) => {
-    const asistente = asistentes.find(a => a.apto == apto)
+    const aptoNumero = Number(apto)
+    const asistente = asistentes.find(a => a.apto === aptoNumero)
     if (!asistente) {
       alert("Este apartamento no registró asistencia")
       return
     }
 
-    const yaVoto = votantesPorPregunta[preguntaId]?.includes(apto)
+    const yaVoto = votantesPorPregunta[preguntaId]?.includes(aptoNumero)
     if (yaVoto) {
       alert("Este apartamento ya votó en esta pregunta")
       return
@@ -59,50 +62,58 @@ function App() {
 
     setVotantesPorPregunta(prev => ({
       ...prev,
-      [preguntaId]: [...(prev[preguntaId] || []), apto]
+      [preguntaId]: [...(prev[preguntaId] || []), aptoNumero]
     }))
   }
 
   const registrarAsistente = async (nombre, apto) => {
-    const aptoData = apartamentos[apto]
+    const aptoNumero = Number(apto)
+    const aptoData = apartamentos[aptoNumero]
 
     if (!aptoData) {
       alert("Apartamento no válido")
       return false
     }
 
-    if (asistentes.some(a => a.apto === apto)) {
+    if (asistentes.some(a => a.apto === aptoNumero)) {
       alert("Este apartamento ya fue registrado")
       return false
     }
 
     await addDoc(collection(db, "asistentes"), {
       nombre,
-      apto,
+      apto: aptoNumero,
       coeficiente: aptoData.coeficiente
     })
 
-    return true // 🔥 Confirmamos que sí se registró
+    localStorage.setItem("apto", String(aptoNumero))
+    setAptoSesion(String(aptoNumero)) // 🔥 ESTO DISPARA EL RE-RENDER
+    return true
+
   }
 
   return (
     <div style={{ padding: "20px" }}>
       <Routes>
-        <Route path="/votacion" element={<PantallaVotacion />} />
         {/* 🏠 Página principal */}
         <Route
           path="/"
           element={
-            <>
-              <h1>Sistema de Asamblea</h1>
-              <RegistroAsistencia onRegistrar={registrarAsistente} />
-              <PanelControl
-                totalPersonas={totalPersonas}
-                totalCoeficiente={totalCoeficiente}
-              />
-            </>
+            aptoSesion
+              ? <Navigate to="/votacion" replace />
+              : (
+                <>
+                  <h1>Sistema de Asamblea</h1>
+                  <RegistroAsistencia onRegistrar={registrarAsistente} />
+                  <PanelControl
+                    totalPersonas={totalPersonas}
+                    totalCoeficiente={totalCoeficiente}
+                  />
+                </>
+              )
           }
         />
+
         {/* 🛠 Panel Admin */}
         <Route
           path="/admin"
@@ -125,6 +136,14 @@ function App() {
               votos={votosPorPregunta}
               totalCoeficiente={totalCoeficiente}
             />
+          }
+        />
+        <Route
+          path="/votacion"
+          element={
+            aptoSesion
+              ? <PantallaVotacion />
+              : <Navigate to="/" replace />
           }
         />
       </Routes>
