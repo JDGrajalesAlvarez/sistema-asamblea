@@ -1,12 +1,22 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 function RegistroAsistencia({ onRegistrar }) {
     const [nombre, setNombre] = useState("")
     const [apto, setApto] = useState("")
+    const navigate = useNavigate()
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        onRegistrar(nombre, apto)
+
+        const registrado = await onRegistrar(nombre, apto)
+
+        // Si el registro fue exitoso
+        if (registrado) {
+            localStorage.setItem("apto", apto) // 🔥 Guardamos sesión
+            navigate("/votacion") // 🔥 Lo mandamos a la votación
+        }
+
         setNombre("")
         setApto("")
     }

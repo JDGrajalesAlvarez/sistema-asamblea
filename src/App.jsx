@@ -8,6 +8,8 @@ import AdminQR from "./pages/AdminQR"
 import AdminPanel from "./pages/AdminPanel"
 import { db } from "./firebase"
 import { collection, addDoc, onSnapshot } from "firebase/firestore"
+import PantallaVotacion from "./pages/PantallaVotacion"
+
 
 function App() {
   const [asistentes, setAsistentes] = useState([])
@@ -66,12 +68,12 @@ function App() {
 
     if (!aptoData) {
       alert("Apartamento no válido")
-      return
+      return false
     }
 
     if (asistentes.some(a => a.apto === apto)) {
       alert("Este apartamento ya fue registrado")
-      return
+      return false
     }
 
     await addDoc(collection(db, "asistentes"), {
@@ -79,10 +81,14 @@ function App() {
       apto,
       coeficiente: aptoData.coeficiente
     })
+
+    return true // 🔥 Confirmamos que sí se registró
   }
+
   return (
     <div style={{ padding: "20px" }}>
       <Routes>
+        <Route path="/votacion" element={<PantallaVotacion />} />
         {/* 🏠 Página principal */}
         <Route
           path="/"
