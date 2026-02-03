@@ -141,7 +141,7 @@ function App() {
         <Route
           path="/votacion"
           element={
-            aptoSesion
+            localStorage.getItem("apto")
               ? <PantallaVotacion />
               : <Navigate to="/" replace />
           }
