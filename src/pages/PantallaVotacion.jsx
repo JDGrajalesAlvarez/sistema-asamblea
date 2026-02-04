@@ -1,17 +1,14 @@
-import { Navigate } from "react-router-dom"
+import { Navigate } from "react-router-dom";
 
-function PantallaVotacion() {
-    const apto = localStorage.getItem("apto")
-
-    if (!apto) {
-        return <Navigate to="/" replace />
-    }
-
+function PantallaVotacion({ onVotar, aptoSesion }) {
     return (
-        <div style={{ padding: "20px" }}>
-            <h1>Bienvenido a la votación</h1>
-            <p>Apartamento registrado: <b>{apto}</b></p>
-            <p>Espera a que el administrador active una pregunta…</p>
+        <div>
+            <h2>Votación en curso</h2>
+            <p>¿Está de acuerdo?</p>
+
+            <button onClick={() => onVotar(aptoSesion, "si")}>✅ Sí</button>
+            <button onClick={() => onVotar(aptoSesion, "no")}>❌ No</button>
+            <button onClick={() => onVotar(aptoSesion, "blanco")}>⚪ Tal vez / En blanco</button>
         </div>
     )
 }
