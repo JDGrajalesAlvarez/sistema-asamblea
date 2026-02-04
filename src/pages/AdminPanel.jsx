@@ -1,8 +1,32 @@
 import { Link } from "react-router-dom";
+import { query, where } from "firebase/firestore"
+import { useState, useEffect } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "/src/firebase.js"
 
 function AdminPanel({ asistentes, totalCoeficiente, votosPorRonda, rondaActual }) {
     const puedeIniciar = totalCoeficiente >= 50;
     const puedeEspecial = totalCoeficiente >= 70;
+    const [resultados, setResultados] = useState({ si: 0, no: 0, blanco: 0 });
+
+    useEffect(() => {
+        const q = query(collection(db, "votos"), where("ronda", "==", rondaActual))
+
+        const unsub = onSnapshot(q, (snapshot) => {
+            let si = 0, no = 0, blanco = 0
+
+            snapshot.forEach(doc => {
+                const v = doc.data()
+                if (v.opcion === "si") si += v.coeficiente
+                if (v.opcion === "no") no += v.coeficiente
+                if (v.opcion === "blanco") blanco += v.coeficiente
+            })
+
+            setResultados({ si, no, blanco })
+        })
+
+        return () => unsub()
+    }, [rondaActual])
 
     return (
         <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "8px" }}>
@@ -11,6 +35,12 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorRonda, rondaActual }
             <p>Coeficiente total: <b>{totalCoeficiente.toFixed(4)}%</b></p>
             <p>{puedeIniciar ? "✅ Quórum para Sesionar" : "❌ Quórum Insuficiente"}</p>
             <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
+
+            <hr />
+            <h3>🗳 Resultados Ronda {rondaActual}</h3>
+            <p>✅ Sí: {resultados.si.toFixed(4)}%</p>
+            <p>❌ No: {resultados.no.toFixed(4)}%</p>
+            <p>⚪ Blanco: {resultados.blanco.toFixed(4)}%</p>
 
             <hr />
             <h3>👥 Asistentes ({asistentes.length})</h3>

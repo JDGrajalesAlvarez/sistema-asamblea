@@ -8,6 +8,8 @@ import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
+import { doc } from "firebase/firestore"
+import { query, where, getDocs } from "firebase/firestore"
 
 
 function App() {
@@ -17,8 +19,19 @@ function App() {
   const [totalCoeficiente, setTotalCoeficiente] = useState(0);
   const [rondaActual, setRondaActual] = useState(1);
   const [votacionActiva, setVotacionActiva] = useState(true);
-  const [votosPorRonda, setVotosPorRonda] = useState({});
-  const [votantesPorRonda, setVotantesPorRonda] = useState({});
+  // const [votosPorRonda, setVotosPorRonda] = useState({});
+  // const [votantesPorRonda, setVotantesPorRonda] = useState({});
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "configuracion", "estadoVotacion"), (docSnap) => {
+      if (docSnap.exists()) {
+        setRondaActual(docSnap.data().rondaActual)
+        setVotacionActiva(docSnap.data().votacionActiva)
+      }
+    })
+
+    return () => unsub()
+  }, [])
 
   useEffect(() => {
     const aptoGuardado = localStorage.getItem("apto");
@@ -67,38 +80,35 @@ function App() {
     }
   };
 
-  const registrarVoto = (apto, opcion) => {
-    if (String(aptoNumero) !== String(aptoSesion)) {
-      return alert("Sesión inválida");
-    }
-    if (!votacionActiva) return alert("La votación está cerrada");
+  const registrarVoto = async (apto, opcion) => {
+    if (!votacionActiva) return alert("La votación está cerrada")
 
-    const aptoNumero = Number(apto);
-    const asistente = asistentes.find(a => a.apto === aptoNumero);
+    const aptoNumero = Number(apto)
+    const asistente = asistentes.find(a => a.apto === aptoNumero)
 
-    if (!asistente) return alert("Este apartamento no registró asistencia");
+    if (!asistente) return alert("Este apartamento no registró asistencia")
 
-    const yaVoto = votantesPorRonda[rondaActual]?.includes(aptoNumero);
-    if (yaVoto) return alert("Este apartamento ya votó en esta ronda");
+    // 🔍 Verificar si ya votó en esta ronda
+    const q = query(
+      collection(db, "votos"),
+      where("ronda", "==", rondaActual),
+      where("apto", "==", aptoNumero)
+    )
 
-    const coef = asistente.coeficiente;
+    const snapshot = await getDocs(q)
+    if (!snapshot.empty) return alert("Este apartamento ya votó en esta ronda")
 
-    setVotosPorRonda(prev => ({
-      ...prev,
-      [rondaActual]: {
-        si: (prev[rondaActual]?.si || 0) + (opcion === "si" ? coef : 0),
-        no: (prev[rondaActual]?.no || 0) + (opcion === "no" ? coef : 0),
-        blanco: (prev[rondaActual]?.blanco || 0) + (opcion === "blanco" ? coef : 0)
-      }
-    }));
+    // 💾 Guardar voto
+    await addDoc(collection(db, "votos"), {
+      ronda: rondaActual,
+      apto: aptoNumero,
+      coeficiente: asistente.coeficiente,
+      opcion,
+      fecha: new Date()
+    })
 
-    setVotantesPorRonda(prev => ({
-      ...prev,
-      [rondaActual]: [...(prev[rondaActual] || []), aptoNumero]
-    }));
-
-    alert("Voto registrado con éxito");
-  };
+    alert("Voto registrado con éxito ✅")
+  }
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
@@ -121,7 +131,7 @@ function App() {
             <AdminPanel
               asistentes={asistentes}
               totalCoeficiente={totalCoeficiente}
-              votosPorRonda={votosPorRonda}
+              // votosPorRonda={votosPorRonda}
               rondaActual={rondaActual}
             />
             <PanelAdminVotacion
@@ -129,7 +139,7 @@ function App() {
               setRondaActual={setRondaActual}
               votacionActiva={votacionActiva}
               setVotacionActiva={setVotacionActiva}
-              votosPorRonda={votosPorRonda}
+            // votosPorRonda={votosPorRonda}
             />
           </div>
         } />
