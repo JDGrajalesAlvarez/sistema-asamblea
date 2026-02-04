@@ -108,7 +108,6 @@ function App() {
             <>
               <h1>🏢 Sistema de Asamblea</h1>
               <RegistroAsistencia onRegistrar={registrarAsistente} />
-              <PanelControl totalPersonas={totalPersonas} totalCoeficiente={totalCoeficiente} />
             </>
           )
         } />
