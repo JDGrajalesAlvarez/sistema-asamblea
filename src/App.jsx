@@ -83,6 +83,7 @@ function App() {
   const registrarVoto = async (apto, opcion) => {
     if (!votacionActiva) return alert("La votación está cerrada")
 
+
     const aptoNumero = Number(apto)
     const asistente = asistentes.find(a => a.apto === aptoNumero)
 
