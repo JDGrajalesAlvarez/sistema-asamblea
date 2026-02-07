@@ -1,26 +1,30 @@
-import { updateDoc, doc } from "firebase/firestore";
 import { db } from "/src/firebase.js";
+import { doc, setDoc } from "firebase/firestore"
+import HistorialRondas from "../components/HistorialRondas"
+
+
 
 function PanelAdminVotacion({ rondaActual, votacionActiva }) {
 
     const abrirVotacion = async () => {
-        await updateDoc(doc(db, "configuracion", "estadoVotacion"), {
+        await setDoc(doc(db, "configuracion", "estadoVotacion"), {
             votacionActiva: true
-        });
-    };
+        }, { merge: true })
+    }
 
     const cerrarVotacion = async () => {
-        await updateDoc(doc(db, "configuracion", "estadoVotacion"), {
+        await setDoc(doc(db, "configuracion", "estadoVotacion"), {
             votacionActiva: false
-        });
-    };
+        }, { merge: true })
+    }
 
     const nuevaRonda = async () => {
-        await updateDoc(doc(db, "configuracion", "estadoVotacion"), {
+        await setDoc(doc(db, "configuracion", "estadoVotacion"), {
             rondaActual: rondaActual + 1,
             votacionActiva: true
-        });
-    };
+        }, { merge: true })
+    }
+
 
     return (
         <div style={{ marginTop: 20, border: "1px solid #ccc", padding: "15px", borderRadius: "8px", background: "#f9f9f9" }}>
@@ -37,6 +41,8 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
             </div>
 
             <p>Estado actual: <b>{votacionActiva ? "🟢 Abierta" : "🔴 Cerrada"}</b></p>
+            <HistorialRondas />
+
         </div>
     );
 }
