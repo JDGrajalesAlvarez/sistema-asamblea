@@ -39,7 +39,7 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorRonda, rondaActual }
         <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "8px" }}>
             <h1>Panel de Administración</h1>
             <h3>📊 Estado del Quórum</h3>
-            <p>Coeficiente total: <b>{totalCoeficiente.toFixed(4)}%</b></p>
+            <p>Coeficiente total: <b>{totalCoeficiente.toFixed(2)}%</b></p>
             <p>{puedeIniciar ? "✅ Quórum para Sesionar" : "❌ Quórum Insuficiente"}</p>
             <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
 
