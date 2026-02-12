@@ -10,23 +10,30 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorRonda, rondaActual }
     const [resultados, setResultados] = useState({ si: 0, no: 0, blanco: 0 });
 
     useEffect(() => {
-        const q = query(collection(db, "votos"), where("ronda", "==", rondaActual))
+        if (!rondaActual) return; // 🔥 protección importante
+
+        const q = query(
+            collection(db, "votos"),
+            where("ronda", "==", rondaActual)
+        );
 
         const unsub = onSnapshot(q, (snapshot) => {
-            let si = 0, no = 0, blanco = 0
+            let si = 0, no = 0, blanco = 0;
 
             snapshot.forEach(doc => {
-                const v = doc.data()
-                if (v.opcion === "si") si += v.coeficiente
-                if (v.opcion === "no") no += v.coeficiente
-                if (v.opcion === "blanco") blanco += v.coeficiente
-            })
+                const v = doc.data();
+                const coef = Number(v.coeficiente) || 0;
 
-            setResultados({ si, no, blanco })
-        })
+                if (v.opcion === "si") si += coef;
+                if (v.opcion === "no") no += coef;
+                if (v.opcion === "blanco") blanco += coef;
+            });
 
-        return () => unsub()
-    }, [rondaActual])
+            setResultados({ si, no, blanco });
+        });
+
+        return () => unsub();
+    }, [rondaActual]);
 
     return (
         <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "8px" }}>

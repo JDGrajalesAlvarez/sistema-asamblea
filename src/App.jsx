@@ -17,21 +17,30 @@ function App() {
   const [asistentes, setAsistentes] = useState([]);
   const [totalPersonas, setTotalPersonas] = useState(0);
   const [totalCoeficiente, setTotalCoeficiente] = useState(0);
-  const [rondaActual, setRondaActual] = useState(1);
+  // const [rondaActual, setRondaActual] = useState(1);
+  const [rondaActual, setRondaActual] = useState(null);
   const [votacionActiva, setVotacionActiva] = useState(true);
   // const [votosPorRonda, setVotosPorRonda] = useState({});
   // const [votantesPorRonda, setVotantesPorRonda] = useState({});
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, "configuracion", "estadoVotacion"), (docSnap) => {
-      if (docSnap.exists()) {
-        setRondaActual(docSnap.data().rondaActual)
-        setVotacionActiva(docSnap.data().votacionActiva)
-      }
-    })
+    const unsub = onSnapshot(
+      doc(db, "configuracion", "estadoVotacion"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
 
-    return () => unsub()
-  }, [])
+          setRondaActual(Number(data.rondaActual) || 1);
+          setVotacionActiva(Boolean(data.votacionActiva));
+        } else {
+          // Si no existe el documento, lo creamos base
+          setRondaActual(1);
+          setVotacionActiva(false);
+        }
+      }
+    );
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const aptoGuardado = localStorage.getItem("apto");
@@ -81,34 +90,58 @@ function App() {
   };
 
   const registrarVoto = async (apto, opcion) => {
-    if (!votacionActiva) return alert("La votación está cerrada")
 
+    if (!apto) {
+      alert("Sesión no válida");
+      return;
+    }
 
-    const aptoNumero = Number(apto)
-    const asistente = asistentes.find(a => a.apto === aptoNumero)
+    if (!rondaActual) {
+      alert("Ronda no disponible");
+      return;
+    }
 
-    if (!asistente) return alert("Este apartamento no registró asistencia")
+    if (!votacionActiva) {
+      alert("La votación está cerrada");
+      return;
+    }
 
-    // 🔍 Verificar si ya votó en esta ronda
+    const aptoNumero = Number(apto);
+
+    if (isNaN(aptoNumero)) {
+      alert("Apartamento inválido");
+      return;
+    }
+
+    const asistente = asistentes.find(a => a.apto === aptoNumero);
+
+    if (!asistente) {
+      alert("Este apartamento no registró asistencia");
+      return;
+    }
+
     const q = query(
       collection(db, "votos"),
       where("ronda", "==", rondaActual),
       where("apto", "==", aptoNumero)
-    )
+    );
 
-    const snapshot = await getDocs(q)
-    if (!snapshot.empty) return alert("Este apartamento ya votó en esta ronda")
+    const snapshot = await getDocs(q);
 
-    // 💾 Guardar voto
+    if (!snapshot.empty) {
+      alert("Este apartamento ya votó en esta ronda");
+      return;
+    }
+
     await addDoc(collection(db, "votos"), {
       ronda: rondaActual,
       apto: aptoNumero,
       coeficiente: asistente.coeficiente,
       opcion,
       fecha: new Date()
-    })
+    });
 
-    alert("Voto registrado con éxito ✅")
+    alert("Voto registrado con éxito ✅");
   }
 
   return (

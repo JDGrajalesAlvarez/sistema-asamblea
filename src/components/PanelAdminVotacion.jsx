@@ -1,16 +1,26 @@
 import { db } from "/src/firebase.js";
 import { doc, setDoc } from "firebase/firestore"
 import HistorialRondas from "../components/HistorialRondas"
-
+import { getDoc, updateDoc } from "firebase/firestore"
 
 
 function PanelAdminVotacion({ rondaActual, votacionActiva }) {
 
     const abrirVotacion = async () => {
-        await setDoc(doc(db, "configuracion", "estadoVotacion"), {
-            votacionActiva: true
-        }, { merge: true })
-    }
+        const ref = doc(db, "configuracion", "estadoVotacion");
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+            await setDoc(ref, {
+                rondaActual: 1,
+                votacionActiva: true
+            });
+        } else {
+            await updateDoc(ref, {
+                votacionActiva: true
+            });
+        }
+    };
 
     const cerrarVotacion = async () => {
         await setDoc(doc(db, "configuracion", "estadoVotacion"), {
@@ -18,13 +28,20 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
         }, { merge: true })
     }
 
-    const nuevaRonda = async () => {
-        await setDoc(doc(db, "configuracion", "estadoVotacion"), {
-            rondaActual: rondaActual + 1,
-            votacionActiva: true
-        }, { merge: true })
-    }
+    const iniciarNuevaRonda = async () => {
 
+        const ref = doc(db, "configuracion", "estadoVotacion");
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) return;
+
+        const rondaActualDB = snap.data().rondaActual || 0;
+
+        await updateDoc(ref, {
+            rondaActual: rondaActualDB + 1,
+            votacionActiva: true
+        });
+    };
 
     return (
         <div style={{ marginTop: 20, border: "1px solid #ccc", padding: "15px", borderRadius: "8px", background: "#f9f9f9" }}>
@@ -35,7 +52,7 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
                 <button onClick={cerrarVotacion} style={{ background: "red", color: "white" }}>🔴 Cerrar</button>
                 <button onClick={() => {
                     if (window.confirm("¿Deseas iniciar una nueva ronda?")) {
-                        nuevaRonda();
+                        iniciarNuevaRonda();
                     }
                 }}>➕ Nueva Ronda</button>
             </div>
