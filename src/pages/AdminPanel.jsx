@@ -1,10 +1,8 @@
-import { Link } from "react-router-dom";
-import { query, where } from "firebase/firestore"
 import { useState, useEffect } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "/src/firebase.js"
 
-function AdminPanel({ asistentes, totalCoeficiente, votosPorRonda, rondaActual }) {
+function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     const puedeIniciar = totalCoeficiente >= 50;
     const puedeEspecial = totalCoeficiente >= 70;
     const [resultados, setResultados] = useState({ si: 0, no: 0, blanco: 0 });
@@ -44,10 +42,10 @@ function AdminPanel({ asistentes, totalCoeficiente, votosPorRonda, rondaActual }
             <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
 
             <hr />
-            <h3>🗳 Resultados Ronda {rondaActual}</h3>
-            <p>✅ Sí: {resultados.si.toFixed(4)}%</p>
-            <p>❌ No: {resultados.no.toFixed(4)}%</p>
-            <p>⚪ Blanco: {resultados.blanco.toFixed(4)}%</p>
+            <h3>Resultados Ronda {rondaActual}</h3>
+            <p>Sí: {resultados.si.toFixed(4)}%</p>
+            <p>No: {resultados.no.toFixed(4)}%</p>
+            <p>colocar aqui el total de votos por apartamento</p>
 
             <hr />
             <h3>👥 Asistentes ({asistentes.length})</h3>

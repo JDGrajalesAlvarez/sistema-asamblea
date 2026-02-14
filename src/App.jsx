@@ -1,27 +1,20 @@
 import { useState, useEffect } from "react";
 import { apartamentos } from "./data/apartamentos";
 import RegistroAsistencia from "./components/RegistroAsistencia";
-import PanelControl from "./components/PanelControl";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
-import { doc } from "firebase/firestore"
-import { query, where, getDocs } from "firebase/firestore"
-
+import {query, where, getDocs, doc, collection, addDoc, onSnapshot} from "firebase/firestore"
 
 function App() {
   const [aptoSesion, setAptoSesion] = useState(null);
   const [asistentes, setAsistentes] = useState([]);
   const [totalPersonas, setTotalPersonas] = useState(0);
   const [totalCoeficiente, setTotalCoeficiente] = useState(0);
-  // const [rondaActual, setRondaActual] = useState(1);
   const [rondaActual, setRondaActual] = useState(null);
   const [votacionActiva, setVotacionActiva] = useState(true);
-  // const [votosPorRonda, setVotosPorRonda] = useState({});
-  // const [votantesPorRonda, setVotantesPorRonda] = useState({});
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -108,11 +101,6 @@ function App() {
 
     const aptoNumero = Number(apto);
 
-    if (isNaN(aptoNumero)) {
-      alert("Apartamento inválido");
-      return;
-    }
-
     const asistente = asistentes.find(a => a.apto === aptoNumero);
 
     if (!asistente) {
@@ -127,11 +115,6 @@ function App() {
     );
 
     const snapshot = await getDocs(q);
-
-    if (!snapshot.empty) {
-      alert("Este apartamento ya votó en esta ronda");
-      return;
-    }
 
     await addDoc(collection(db, "votos"), {
       ronda: rondaActual,
@@ -165,7 +148,6 @@ function App() {
             <AdminPanel
               asistentes={asistentes}
               totalCoeficiente={totalCoeficiente}
-              // votosPorRonda={votosPorRonda}
               rondaActual={rondaActual}
             />
             <PanelAdminVotacion
@@ -173,7 +155,6 @@ function App() {
               setRondaActual={setRondaActual}
               votacionActiva={votacionActiva}
               setVotacionActiva={setVotacionActiva}
-            // votosPorRonda={votosPorRonda}
             />
           </div>
         } />

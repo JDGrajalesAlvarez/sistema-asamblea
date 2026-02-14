@@ -1,36 +1,38 @@
 import { useEffect, useState } from "react"
 import { doc, onSnapshot } from "firebase/firestore"
+import CardsPreguntas from "../components/CardsPreguntas"
 import { db } from "../firebase"
 
+const PREGUNTAS_ESTATICAS = [
+    "¿Aprueban los estados financieros del periodo 2025?",
+    "¿Aprueban la reforma del Reglamento de la Propiedad y el manual de convivencia?",
+    "¿Aprueban asegurar de aquí en adelante las áreas comunes y privadas de la copropiedad?",
+    "¿Aprueban el presupuesto 2026?",
+    "¿Aceptan los postulados para integrar el consejo de administración?",
+    "¿Aceptan los postulados para integrar el comité de convivencia?",
+    "¿Aceptan los postulados para integrar el comité de seguridad?"
+];
+
 function PantallaVotacion({ onVotar, aptoSesion }) {
-    const [rondaActual, setRondaActual] = useState(1)
-    const [votacionActiva, setVotacionActiva] = useState(false)
+    const [preguntasDinamicas, setPreguntasDinamicas] = useState([]);
 
     useEffect(() => {
         const unsub = onSnapshot(doc(db, "configuracion", "estadoVotacion"), (docSnap) => {
             if (docSnap.exists()) {
-                setRondaActual(docSnap.data().rondaActual)
-                setVotacionActiva(docSnap.data().votacionActiva)
+                setPreguntasDinamicas(docSnap.data().extras || []);
             }
-        })
+        });
+        return () => unsub();
+    }, []);
 
-        return () => unsub()
-    }, [])
+    const todasLasPreguntas = [...PREGUNTAS_ESTATICAS, ...preguntasDinamicas];
 
     return (
-        <div>
-            <h2>🗳️ Ronda {rondaActual}</h2>
+        <div className="container">
+            {todasLasPreguntas.map((texto, index) => (
+                <CardsPreguntas key={index} numero={index + 1} texto={texto} onVotar={onVotar} aptoSesion={aptoSesion} />
+            ))}
 
-            {!votacionActiva ? (
-                <p style={{ color: "red" }}>La votación está cerrada</p>
-            ) : (
-                <>
-                    <p>¿Está de acuerdo?</p>
-                    <button onClick={() => onVotar(aptoSesion, "si")}>✅ Sí</button>
-                    <button onClick={() => onVotar(aptoSesion, "no")}>❌ No</button>
-                    <button onClick={() => onVotar(aptoSesion, "blanco")}>⚪ Tal vez / En blanco</button>
-                </>
-            )}
         </div>
     )
 }

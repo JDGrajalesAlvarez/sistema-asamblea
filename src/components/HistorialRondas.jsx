@@ -36,7 +36,6 @@ function HistorialRondas() {
                     <h4>Ronda {ronda}</h4>
                     <p>✅ Sí: {datos.si.toFixed(2)}%</p>
                     <p>❌ No: {datos.no.toFixed(2)}%</p>
-                    <p>⚪ Blanco: {datos.blanco.toFixed(2)}%</p>
                     <p><b>Total votado: {datos.total.toFixed(2)}%</b></p>
                 </div>
             ))}
