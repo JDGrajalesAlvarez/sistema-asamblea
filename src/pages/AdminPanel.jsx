@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, onSnapshot, query, where, doc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc, addDoc } from "firebase/firestore";
 import { db } from "/src/firebase.js"
 import { apartamentos } from "../data/apartamentos";
 
@@ -9,9 +9,6 @@ function FilaAsistente({ asistente }) {
     const [aptosRepresentados, setAptosRepresentados] = useState([]);
 
     useEffect(() => {
-
-        if (!asistente?.id) return;  // 👈 PROTECCIÓN
-
         const q = query(
             collection(db, "asistente_apartamentos"),
             where("asistenteId", "==", asistente.id)
@@ -25,9 +22,6 @@ function FilaAsistente({ asistente }) {
         return () => unsub();
 
     }, [asistente.id])
-
-    const sumaCoeficientes = aptosRepresentados
-        .reduce((total, a) => total + (a.coeficiente || 0), 0);
 
     const guardarCambio = async () => {
         if (!asistente.id) return alert("ID no encontrado");
@@ -90,7 +84,6 @@ function FilaAsistente({ asistente }) {
             alert("Error al guardar");
         }
     };
-
     return (
         <tr>
             <td align="center">
@@ -111,13 +104,15 @@ function FilaAsistente({ asistente }) {
                 ) : (
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: "0 5px" }}>
                         <span>{asistente.apto}</span>
-                        <button onClick={() => setEditando(true)} style={{ fontSize: "10px" }}>Editar</button>
+                        <button onClick={() => setEditando(true)} style={{ fontSize: "10px" }}>Agregar Apartamentos</button>
                     </div>
                 )}
             </td>
+
             <td>{asistente.nombre}</td>
+            <td>{aptosRepresentados.map(a => a.apto).join(", ")}</td>
             <td align="right">
-                <b>{Number(sumaCoeficientes.toFixed(2))}%</b>
+                <b>{Number(asistente.coeficiente || 0).toFixed(2)}%</b>
             </td>
         </tr>
     );
@@ -131,7 +126,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     useEffect(() => {
         if (!rondaActual) return;
 
-        const q = query(collection(db, "votos"), where("ronda", "==", rondaActual));
+        const q = query(collection(db, "votacion"), where("ronda", "==", rondaActual));
         const unsub = onSnapshot(q, (snapshot) => {
             let si = 0, no = 0, blanco = 0;
             snapshot.forEach(doc => {
@@ -234,14 +229,13 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                 <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
             </section>
 
-            <hr />
+            {/* <hr />
 
             <section>
                 <h3>Resultados Ronda {rondaActual}</h3>
                 <p>Sí: {resultados.si.toFixed(4)}%</p>
                 <p>No: {resultados.no.toFixed(4)}%</p>
-                <p>Blanco: {resultados.blanco.toFixed(4)}%</p>
-            </section>
+            </section> */}
 
             <hr />
 
@@ -252,6 +246,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                         <tr style={{ background: "#f4f4f4" }}>
                             <th style={{ padding: "8px" }}>Apto (Editable)</th>
                             <th>Nombre</th>
+                            <th>Apartamentos Representados</th>
                             <th>Coef %</th>
                         </tr>
                     </thead>

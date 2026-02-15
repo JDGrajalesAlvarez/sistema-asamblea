@@ -1,42 +1,75 @@
-import { useEffect, useState } from "react"
-import { doc, onSnapshot } from "firebase/firestore"
-import { db } from "../firebase"
-import CardsPreguntas from "../components/CardsPreguntas"
-
-const PREGUNTAS_ESTATICAS = [
-    "¿Aprueban los estados financieros del periodo 2025?",
-    "¿Aprueban la reforma del Reglamento de la Propiedad y el manual de convivencia?",
-    "¿Aprueban asegurar de aquí en adelante las áreas comunes y privadas de la copropiedad?",
-    "¿Aprueban el presupuesto 2026?",
-    "¿Aceptan los postulados para integrar el consejo de administración?",
-    "¿Aceptan los postulados para integrar el comité de convivencia?",
-    "¿Aceptan los postulados para integrar el comité de seguridad?"
-];
+import { useEffect, useState } from "react";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import CardsPreguntas from "../components/CardsPreguntas";
+import { db } from "../firebase";
 
 function PantallaVotacion({ onVotar, aptoSesion }) {
-    const [preguntasDinamicas, setPreguntasDinamicas] = useState([]);
+    const [preguntaActiva, setPreguntaActiva] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [votacionAbierta, setVotacionAbierta] = useState(false);
 
     useEffect(() => {
-        const unsub = onSnapshot(doc(db, "configuracion", "estadoVotacion"), (docSnap) => {
+        const unsubConfig = onSnapshot(doc(db, "configuracion", "estadoVotacion"), async (docSnap) => {
             if (docSnap.exists()) {
-                setPreguntasDinamicas(docSnap.data().extras || []);
+                const data = docSnap.data();
+                const rondaActual = data.rondaActual;
+                setVotacionAbierta(data.votacionActiva);
+
+                if (rondaActual) {
+                    const preguntaRef = doc(db, "preguntas", String(rondaActual));
+                    const preguntaSnap = await getDoc(preguntaRef);
+
+                    if (preguntaSnap.exists()) {
+                        setPreguntaActiva({
+                            id: rondaActual,
+                            ...preguntaSnap.data()
+                        });
+                    }
+                }
             }
-            if (!aptoSesion) {
-                return <h2>Sesión no válida</h2>
-            }
+            setLoading(false);
         });
-        return () => unsub();
+
+        return () => unsubConfig();
     }, []);
 
-    const todasLasPreguntas = [...PREGUNTAS_ESTATICAS, ...preguntasDinamicas];
+    if (loading) return <p>Cargando pregunta...</p>;
 
     return (
-        <div className="container">
-            {todasLasPreguntas.map((texto, index) => (
-                <CardsPreguntas key={index} numero={index + 1} texto={texto} onVotar={onVotar} aptoSesion={aptoSesion} />
-            ))}
+        <div className="container" style={{ textAlign: "center", marginTop: "20px" }}>
+            <h2>🗳️ Panel de Votación</h2>
+            <p>Apartamento: <strong>{aptoSesion}</strong></p>
+            <hr />
+
+            {!votacionAbierta ? (
+                <div style={styles.mensajeCerrado}>
+                    <h3>La votación se encuentra cerrada</h3>
+                    <p>Por favor, espere a que el administrador inicie la siguiente pregunta.</p>
+                </div>
+            ) : preguntaActiva ? (
+                <CardsPreguntas
+                    key={preguntaActiva.id}
+                    numero={preguntaActiva.ronda}
+                    texto={preguntaActiva.texto}
+                    onVotar={onVotar}
+                    aptoSesion={aptoSesion}
+                />
+            ) : (
+                <p>No hay una pregunta configurada para esta ronda.</p>
+            )}
         </div>
-    )
+    );
 }
 
-export default PantallaVotacion
+const styles = {
+    mensajeCerrado: {
+        padding: "40px",
+        backgroundColor: "#fff3cd",
+        color: "#856404",
+        borderRadius: "10px",
+        border: "1px solid #ffeeba",
+        marginTop: "20px"
+    }
+};
+
+export default PantallaVotacion;

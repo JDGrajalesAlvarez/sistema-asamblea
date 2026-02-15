@@ -6,8 +6,7 @@ import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
-import { doc } from "firebase/firestore"
-import { query, where, getDocs } from "firebase/firestore"
+import { query, where, getDocs, doc, collection, addDoc, onSnapshot } from "firebase/firestore";
 import RegistroAsistente from "./pages/RegistroAsistente"
 import AdminQR from "./pages/AdminQR"
 import PantallaCarga from "./pages/PantallaCarga";
@@ -42,23 +41,23 @@ function App() {
 
   useEffect(() => {
     const aptoGuardado = localStorage.getItem("apto");
-
-    if (aptoGuardado) {
-      setAptoSesion(aptoGuardado);
-    }
-    setCargandoSesion(false);
+    if (aptoGuardado) setAptoSesion(aptoGuardado);
+    setCargandoSesion(false)
   }, []);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) => {
-      // const lista = snapshot.docs.map(doc => doc.data());
-      const lista = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const lista = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
       setAsistentes(lista);
       setTotalPersonas(lista.length);
+
       const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
       setTotalCoeficiente(sumaCoef);
-      // setHayQuorum(sumaCoef >= 50);
-    });
+    })
     return () => unsub();
   }, []);
 
@@ -125,31 +124,30 @@ function App() {
     }
 
     const q = query(
-      collection(db, "votos"),
+      collection(db, "votacion"),
       where("ronda", "==", rondaActual),
       where("apto", "==", aptoNumero)
     );
 
     const snapshot = await getDocs(q);
 
-    if (!snapshot.empty) {
-      alert("Este apartamento ya votó en esta ronda");
-      return;
-    }
-
-    await addDoc(collection(db, "votos"), {
+    await addDoc(collection(db, "votacion"), {
       ronda: rondaActual,
-      apto: aptoNumero,
+      apto: asistente.apto,
+      nombre: asistente.nombre,   // ✅ CORRECTO
       coeficiente: asistente.coeficiente,
       opcion,
       fecha: new Date()
     });
 
+
     alert("Voto registrado con éxito ✅");
   }
+
   if (cargandoSesion) {
-    return <h2>Cargando sesión...</h2>;
+    return <h2>Cargand sesion...</h2>
   }
+
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
       <Routes>
@@ -195,6 +193,7 @@ function App() {
         } />
         <Route path="/qr" element={<AdminQR />} />
       </Routes>
+
     </div>
   );
 }
