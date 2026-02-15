@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { apartamentos } from "./data/apartamentos";
-import RegistroAsistencia from "./components/RegistroAsistencia";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { db } from "./firebase";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
-import {query, where, getDocs, doc, collection, addDoc, onSnapshot} from "firebase/firestore"
+import { query, where, getDocs, doc, collection, addDoc, onSnapshot } from "firebase/firestore";
+import RegistroAsistente from "./pages/RegistroAsistente"
+import AdminQR from "./pages/AdminQR"
+import PantallaCarga from "./pages/PantallaCarga";
 
 function App() {
   const [aptoSesion, setAptoSesion] = useState(null);
+  const [cargandoSesion, setCargandoSesion] = useState(true);
   const [asistentes, setAsistentes] = useState([]);
   const [totalPersonas, setTotalPersonas] = useState(0);
   const [totalCoeficiente, setTotalCoeficiente] = useState(0);
@@ -26,7 +29,7 @@ function App() {
           setRondaActual(Number(data.rondaActual) || 1);
           setVotacionActiva(Boolean(data.votacionActiva));
         } else {
-          setRondaActual(2);
+          setRondaActual(1);
           setVotacionActiva(false);
         }
       }
@@ -37,23 +40,24 @@ function App() {
   useEffect(() => {
     const aptoGuardado = localStorage.getItem("apto");
     if (aptoGuardado) setAptoSesion(aptoGuardado);
+    setCargandoSesion(false)
   }, []);
 
-    useEffect(()=>{
-      const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) =>{
-        const lista = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) => {
+      const lista = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-        setAsistentes(lista);
-        setTotalPersonas(lista.length);
+      setAsistentes(lista);
+      setTotalPersonas(lista.length);
 
-        const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
-        setTotalCoeficiente(sumaCoef);
-      })
-      return () => unsub();
-    }, []);
+      const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
+      setTotalCoeficiente(sumaCoef);
+    })
+    return () => unsub();
+  }, []);
 
   const registrarAsistente = async (nombre, apto) => {
     try {
@@ -131,22 +135,38 @@ function App() {
     alert("Voto registrado con éxito ✅");
   }
 
-  return (
+  if (cargandoSesion) {
+    return <h2>Cargand sesion...</h2>
+  }
+
+   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
       <Routes>
-        <Route path="/" element={
-          aptoSesion ? <Navigate to="/votacion" replace /> : (
-            <>
-              <h1>🏢 Sistema de Asamblea</h1>
-              <RegistroAsistencia onRegistrar={registrarAsistente} />
-            </>
-          )
-        } />
-
-        <Route path="/votacion" element={
-          aptoSesion ? <PantallaVotacion onVotar={registrarVoto} aptoSesion={aptoSesion} /> : <Navigate to="/" replace />
-        } />
-
+        <Route
+          path="/registro"
+          element={
+            aptoSesion
+              ? <Navigate to="/PantallaCarga" replace />
+              : <RegistroAsistente onRegistrar={registrarAsistente} />
+          }
+        />
+        <Route
+          path="/PantallaCarga"
+          element={<PantallaCarga totalCoeficiente={totalCoeficiente} />}
+        />
+        <Route
+          path="/votacion"
+          element={
+            aptoSesion
+              ? ("hayQuorum"
+                ? <PantallaVotacion onVotar={registrarVoto}
+                  aptoSesion={aptoSesion}
+                />
+                : <Navigate to="/PantallaCarga" replace />
+              )
+              : <Navigate to="/registro" replace />
+          }
+        />
         <Route path="/admin" element={
           <div className="admin-container">
             <AdminPanel
@@ -162,7 +182,9 @@ function App() {
             />
           </div>
         } />
+        <Route path="/qr" element={<AdminQR />} />
       </Routes>
+       
     </div>
   );
 }

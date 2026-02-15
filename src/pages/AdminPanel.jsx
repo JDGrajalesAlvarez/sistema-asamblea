@@ -23,9 +23,6 @@ function FilaAsistente({ asistente }) {
 
     }, [asistente.id])
 
-    const sumaCoeficientes = aptosRepresentados
-        .reduce((total, a) => total + (a.coeficiente || 0), 0);
-
     const guardarCambio = async () => {
         if (!asistente.id) return alert("ID no encontrado");
 
@@ -156,14 +153,13 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                 <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
             </section>
 
-            <hr />
+            {/* <hr />
 
             <section>
                 <h3>Resultados Ronda {rondaActual}</h3>
                 <p>Sí: {resultados.si.toFixed(4)}%</p>
                 <p>No: {resultados.no.toFixed(4)}%</p>
-                <p>Blanco: {resultados.blanco.toFixed(4)}%</p>
-            </section>
+            </section> */}
 
             <hr />
 
