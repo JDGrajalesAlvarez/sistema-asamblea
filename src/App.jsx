@@ -6,7 +6,7 @@ import { db } from "./firebase";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
-import {query, where, getDocs, doc, collection, addDoc, onSnapshot} from "firebase/firestore"
+import { query, where, getDocs, doc, collection, addDoc, onSnapshot } from "firebase/firestore"
 
 function App() {
   const [aptoSesion, setAptoSesion] = useState(null);
@@ -40,21 +40,21 @@ function App() {
     if (aptoGuardado) setAptoSesion(aptoGuardado);
   }, []);
 
-    useEffect(()=>{
-      const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) =>{
-        const lista = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) => {
+      const lista = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-        setAsistentes(lista);
-        setTotalPersonas(lista.length);
+      setAsistentes(lista);
+      setTotalPersonas(lista.length);
 
-        const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
-        setTotalCoeficiente(sumaCoef);
-      })
-      return () => unsub();
-    }, []);
+      const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
+      setTotalCoeficiente(sumaCoef);
+    })
+    return () => unsub();
+  }, []);
 
   const registrarAsistente = async (nombre, apto) => {
     try {
@@ -123,11 +123,13 @@ function App() {
 
     await addDoc(collection(db, "votos"), {
       ronda: rondaActual,
-      apto: aptoNumero,
+      apto: asistente.apto,
+      nombre: asistente.nombre,   // ✅ CORRECTO
       coeficiente: asistente.coeficiente,
       opcion,
       fecha: new Date()
     });
+
 
     alert("Voto registrado con éxito ✅");
   }
