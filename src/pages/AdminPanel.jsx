@@ -142,6 +142,82 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
         return () => unsub();
     }, [rondaActual]);
 
+
+    const exportarCSV = async () => {
+        try {
+            const snapshot = await getDocs(collection(db, "votos"));
+
+            const votos = [];
+            const preguntasSet = new Set();
+
+            snapshot.forEach(docSnap => {
+                const v = docSnap.data();
+                preguntasSet.add(v.pregunta);
+                votos.push(v);
+            });
+
+            const preguntas = Array.from(preguntasSet).sort((a, b) => a - b);
+
+            // Agrupar por apartamento individual
+            const mapa = {};
+
+            votos.forEach(v => {
+                const aptos = String(v.apto)
+                    .split(",")
+                    .map(a => a.trim())
+                    .filter(a => a !== "");
+
+                aptos.forEach(apto => {
+                    const key = `${v.nombre}-${apto}`;
+
+                    if (!mapa[key]) {
+                        mapa[key] = {
+                            nombre: v.nombre,
+                            apto: apto,
+                            respuestas: {}
+                        };
+                    }
+
+                    mapa[key].respuestas[v.pregunta] = v.opcion;
+                });
+            });
+
+            // Construcción del CSV
+            let filas = [];
+
+            const encabezado = ["Nombre", "Apto", ...preguntas.map(p => `P${p}`)];
+            filas.push(encabezado);
+
+            Object.values(mapa).forEach(registro => {
+                const fila = [
+                    registro.nombre,
+                    registro.apto,
+                    ...preguntas.map(p => registro.respuestas[p] || "")
+                ];
+
+
+                filas.push(fila);
+            });
+
+            const contenido = "\uFEFF" + filas.map(f => f.join(";")).join("\n");
+
+            const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "resultados_votacion.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+
+        } catch (error) {
+            console.error(error);
+            alert("Error al exportar CSV");
+        }
+    };
+
     return (
         <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "8px", fontFamily: "sans-serif" }}>
             <h1>Panel de Administración</h1>
@@ -181,6 +257,14 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                     </tbody>
                 </table>
             </div>
+            <hr />
+            <button
+                onClick={exportarCSV}
+                style={{ padding: "8px 12px", cursor: "pointer" }}
+            >
+                📥 Exportar CSV Final
+            </button>
+
         </div>
     );
 }

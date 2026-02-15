@@ -126,11 +126,13 @@ function App() {
 
     await addDoc(collection(db, "votacion"), {
       ronda: rondaActual,
-      apto: aptoNumero,
+      apto: asistente.apto,
+      nombre: asistente.nombre,   // ✅ CORRECTO
       coeficiente: asistente.coeficiente,
       opcion,
       fecha: new Date()
     });
+
 
     alert("Voto registrado con éxito ✅");
   }
