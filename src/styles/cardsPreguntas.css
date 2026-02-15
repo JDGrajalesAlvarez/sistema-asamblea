@@ -1,0 +1,65 @@
+.card-Pregunta {
+    background-color: #042542;
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: transform 0.2s ease;
+}
+
+.card-Pregunta:hover {
+    transform: translateY(-5px);
+}
+
+.card-Pregunta h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #00d4ff; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.card-Pregunta p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 5px 0;
+}
+
+.botones-container {
+    display: flex;
+    gap: 10px; 
+    width: 100%;
+}
+
+.botones-container button {
+    flex: 1; 
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+}
+
+.botones-container button:first-child {
+    background-color: #28a745;
+    color: white;
+}
+
+.botones-container button:last-child {
+    background-color: #dc3545;
+    color: white;
+}
+
+.botones-container button:hover {
+    filter: brightness(1.2); 
+}
+
+.botones-container button:active {
+    transform: scale(0.98); 
+}

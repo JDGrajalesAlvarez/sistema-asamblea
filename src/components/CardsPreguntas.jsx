@@ -1,4 +1,4 @@
-// import "../styles/CardsPreguntas"
+import "../styles/CardsPreguntas.css"
 
 function CardsPreguntas({ numero, texto, onVotar, aptoSesion }) {
     return (

@@ -40,16 +40,21 @@ function App() {
     if (aptoGuardado) setAptoSesion(aptoGuardado);
   }, []);
 
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) => {
-      const lista = snapshot.docs.map(doc => doc.data());
-      setAsistentes(lista);
-      setTotalPersonas(lista.length);
-      const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
-      setTotalCoeficiente(sumaCoef);
-    });
-    return () => unsub();
-  }, []);
+    useEffect(()=>{
+      const unsub = onSnapshot(collection(db, "asistentes"), (snapshot) =>{
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        setAsistentes(lista);
+        setTotalPersonas(lista.length);
+
+        const sumaCoef = lista.reduce((acc, a) => acc + (Number(a.coeficiente) || 0), 0);
+        setTotalCoeficiente(sumaCoef);
+      })
+      return () => unsub();
+    }, []);
 
   const registrarAsistente = async (nombre, apto) => {
     try {
