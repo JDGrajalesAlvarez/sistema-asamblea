@@ -1,74 +1,121 @@
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, query, where, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc, addDoc } from "firebase/firestore";
 import { db } from "/src/firebase.js"
 import { apartamentos } from "../data/apartamentos";
 
 function FilaAsistente({ asistente }) {
     const [editando, setEditando] = useState(false);
     const [nuevoApto, setNuevoApto] = useState(String(asistente.apto || ""));
+    const [aptosRepresentados, setAptosRepresentados] = useState([]);
 
-    const calcularSumaTotal = (valor) => {
-        const texto = String(valor || ""); 
-        if (!texto.trim()) return 0;
+    useEffect(() => {
+        const q = query(
+            collection(db, "asistente_apartamentos"),
+            where("asistenteId", "==", asistente.id)
+        );
 
-        return texto
-            .split(",")
-            .map(item => item.trim())
-            .filter(item => item !== "")
-            .reduce((total, numApto) => {
-                const data = apartamentos[numApto];
-                return total + (data ? data.coeficiente : 0);
-            }, 0);
-    };
+        const unsub = onSnapshot(q, (snapshot) => {
+            const datos = snapshot.docs.map(doc => doc.data());
+            setAptosRepresentados(datos);
+        })
 
-    const sumaCoeficientes = calcularSumaTotal(nuevoApto);
+        return () => unsub();
+
+    }, [asistente.id])
+
+    const sumaCoeficientes = aptosRepresentados
+        .reduce((total, a) => total + (a.coeficiente || 0), 0);
 
     const guardarCambio = async () => {
         if (!asistente.id) return alert("ID no encontrado");
-        const coeficienteFinal = Number(sumaCoeficientes.toFixed(2));
 
         try {
-            const asistenteRef = doc(db, "asistentes", asistente.id);
-            await updateDoc(asistenteRef, {
-                apto: nuevoApto,
-                coeficiente: coeficienteFinal 
+            const lista = nuevoApto
+                .split(",")
+                .map(a => a.trim())
+                .filter(a => a !== "");
+
+            const aptosExistentes = new Set([
+                String(asistente.apto),
+                ...aptosRepresentados.map(a => String(a.apto))
+            ]);
+
+            let sumaNueva = 0;
+            let aptosAgregados = [];
+
+            for (let apto of lista) {
+
+                if (aptosExistentes.has(apto)) {
+                    alert(`⚠️ El apartamento ${apto} ya existe`);
+                    continue;
+                }
+
+                const data = apartamentos[apto];
+                if (!data) {
+                    alert(`⚠️ El apartamento ${apto} no existe en coeficientes`);
+                    continue;
+                }
+
+                sumaNueva += data.coeficiente;
+                aptosAgregados.push(apto);
+
+                await addDoc(collection(db, "asistente_apartamentos"), {
+                    asistenteId: asistente.id,
+                    apto: apto,
+                    coeficiente: data.coeficiente
+                });
+            }
+
+            if (aptosAgregados.length === 0) {
+                alert("No se agregó ningún apartamento nuevo");
+                return;
+            }
+
+            const coefActual = Number(asistente.coeficiente || 0);
+            const nuevoCoef = Number((coefActual + sumaNueva).toFixed(2));
+
+            await updateDoc(doc(db, "asistentes", asistente.id), {
+                coeficiente: nuevoCoef
             });
 
             setEditando(false);
-            alert("✅ Registro y coeficiente actualizados");
+            setNuevoApto("");
+            alert(`✅ Agregados: ${aptosAgregados.join(", ")}`);
+
         } catch (e) {
             console.error(e);
             alert("Error al guardar");
         }
     };
-
     return (
         <tr>
             <td align="center">
                 {editando ? (
                     <div style={{ display: 'flex', gap: '4px' }}>
-                        <input 
-                            type="text" 
-                            value={nuevoApto} 
+                        <input
+                            type="text"
+                            value={nuevoApto}
                             onChange={(e) => setNuevoApto(e.target.value)}
                             style={{ width: "120px" }}
                         />
                         <button onClick={guardarCambio}>✅</button>
-                        <button onClick={() => { 
-                            setEditando(false); 
-                            setNuevoApto(String(asistente.apto)); 
+                        <button onClick={() => {
+                            setEditando(false);
+                            setNuevoApto(String(asistente.apto));
                         }}>❌</button>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: "0 5px" }}>
                         <span>{asistente.apto}</span>
-                        <button onClick={() => setEditando(true)} style={{ fontSize: "10px" }}>Editar</button>
+                        <button onClick={() => setEditando(true)} style={{ fontSize: "10px" }}>Agregar Apartamentos</button>
                     </div>
                 )}
             </td>
+
             <td>{asistente.nombre}</td>
+            <td>{aptosRepresentados.map(a => a.apto).join(", ")}</td>
             <td align="right">
-                <b>{Number(sumaCoeficientes.toFixed(2))}%</b>
+                <b>{Number(asistente.coeficiente || 0).toFixed(2)}%</b>
             </td>
         </tr>
     );
@@ -82,7 +129,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     useEffect(() => {
         if (!rondaActual) return;
 
-        const q = query(collection(db, "votos"), where("ronda", "==", rondaActual));
+        const q = query(collection(db, "votacion"), where("ronda", "==", rondaActual));
         const unsub = onSnapshot(q, (snapshot) => {
             let si = 0, no = 0, blanco = 0;
             snapshot.forEach(doc => {
@@ -101,7 +148,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     return (
         <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "8px", fontFamily: "sans-serif" }}>
             <h1>Panel de Administración</h1>
-            
+
             <section>
                 <h3>📊 Estado del Quórum</h3>
                 <p>Coeficiente total: <b>{totalCoeficiente.toFixed(2)}%</b></p>
@@ -110,7 +157,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
             </section>
 
             <hr />
-            
+
             <section>
                 <h3>Resultados Ronda {rondaActual}</h3>
                 <p>Sí: {resultados.si.toFixed(4)}%</p>
@@ -119,7 +166,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
             </section>
 
             <hr />
-            
+
             <h3>👥 Asistentes ({asistentes.length})</h3>
             <div style={{ maxHeight: "300px", overflowY: "auto" }}>
                 <table border="1" width="100%" style={{ borderCollapse: "collapse", fontSize: "14px" }}>
@@ -127,6 +174,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                         <tr style={{ background: "#f4f4f4" }}>
                             <th style={{ padding: "8px" }}>Apto (Editable)</th>
                             <th>Nombre</th>
+                            <th>Apartamentos Representados</th>
                             <th>Coef %</th>
                         </tr>
                     </thead>

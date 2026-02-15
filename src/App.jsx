@@ -26,8 +26,7 @@ function App() {
           setRondaActual(Number(data.rondaActual) || 1);
           setVotacionActiva(Boolean(data.votacionActiva));
         } else {
-          // Si no existe el documento, lo creamos base
-          setRondaActual(1);
+          setRondaActual(2);
           setVotacionActiva(false);
         }
       }
@@ -114,14 +113,14 @@ function App() {
     }
 
     const q = query(
-      collection(db, "votos"),
+      collection(db, "votacion"),
       where("ronda", "==", rondaActual),
       where("apto", "==", aptoNumero)
     );
 
     const snapshot = await getDocs(q);
 
-    await addDoc(collection(db, "votos"), {
+    await addDoc(collection(db, "votacion"), {
       ronda: rondaActual,
       apto: aptoNumero,
       coeficiente: asistente.coeficiente,
