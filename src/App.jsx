@@ -9,6 +9,7 @@ import { query, where, getDocs, doc, collection, addDoc, onSnapshot } from "fire
 import RegistroAsistente from "./pages/RegistroAsistente"
 import AdminQR from "./pages/AdminQR"
 import PantallaCarga from "./pages/PantallaCarga";
+import "./styles/app.css"
 
 function App() {
   const [aptoSesion, setAptoSesion] = useState(null);

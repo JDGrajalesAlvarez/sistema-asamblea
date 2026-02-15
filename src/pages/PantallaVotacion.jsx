@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import CardsPreguntas from "../components/CardsPreguntas";
 import { db } from "../firebase";
+import HistorialRondas from "../components/HistorialRondas";
+import "../styles/CardsPreguntas.css"
 
 function PantallaVotacion({ onVotar, aptoSesion }) {
     const [preguntaActiva, setPreguntaActiva] = useState(null);
@@ -37,8 +39,8 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
 
     return (
         <div className="container" style={{ textAlign: "center", marginTop: "20px" }}>
-            <h2>🗳️ Panel de Votación</h2>
-            <p>Apartamento: <strong>{aptoSesion}</strong></p>
+            <h2 className="title-votacion">Panel de Votación</h2>
+            <p className="apt-votacion">Apartamento: <strong>{aptoSesion}</strong></p>
             <hr />
 
             {!votacionAbierta ? (
@@ -57,6 +59,8 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
             ) : (
                 <p>No hay una pregunta configurada para esta ronda.</p>
             )}
+
+            <HistorialRondas/>
         </div>
     );
 }

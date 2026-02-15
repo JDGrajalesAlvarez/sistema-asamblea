@@ -3,6 +3,7 @@ import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "firebase/fi
 import HistorialRondas from "../components/HistorialRondas";
 import ModalNuevaPregunta from './ModalNuevaPrgunta';
 import { useState, useEffect } from "react";
+import "../styles/adminPanelVotacion.css"
 
 function PanelAdminVotacion({ rondaActual, votacionActiva }) {
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -14,7 +15,7 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
             setTotalPreguntasExistentes(querySnapshot.size);
         };
         obtenerTotalPreguntas();
-    }, [rondaActual, mostrarModal]); 
+    }, [rondaActual, mostrarModal]);
 
     const abrirVotacion = async () => {
         const ref = doc(db, "configuracion", "estadoVotacion");
@@ -40,11 +41,11 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
         if (!textoPregunta.trim()) return;
 
         const configRef = doc(db, "configuracion", "estadoVotacion");
-        
+
         try {
             const snapConfig = await getDoc(configRef);
             let siguienteRonda = 1;
-            
+
             if (snapConfig.exists()) {
                 const querySnapshot = await getDocs(collection(db, "preguntas"));
                 siguienteRonda = querySnapshot.size + 1;
@@ -71,18 +72,21 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
     };
 
     return (
-        <div style={styles.container}>
-            <h2 style={styles.title}>⚙️ Panel de Control de Votación</h2>
+        <div className="admin-container">
+            <h2 className="admin-title">⚙️ Panel de Control Administrativo</h2>
 
-            <div style={styles.adminCard}>
-                <div style={styles.section}>
-                    <p>Ronda actual en pantalla: <strong style={styles.rondaText}># {rondaActual}</strong></p>
-                    <div style={styles.controls}>
-                        <label>Seleccionar pregunta para los usuarios: </label>
-                        <select 
-                            value={rondaActual} 
+            <div className="admin-card">
+                <div className="admin-header-section">
+                    <p className="ronda-info">
+                        Pregunta proyectada:
+                        <span className="ronda-badge">#{rondaActual}</span>
+                    </p>
+
+                    <div className="admin-controls">
+                        <select
+                            className="admin-select"
+                            value={rondaActual}
                             onChange={(e) => cambiarRondaManualmente(e.target.value)}
-                            style={styles.select}
                         >
                             {Array.from({ length: totalPreguntasExistentes }, (_, i) => i + 1).map(num => (
                                 <option key={num} value={num}>Pregunta {num}</option>
@@ -91,34 +95,37 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
                     </div>
                 </div>
 
-                <div style={styles.buttonGroup}>
-                    <button 
-                        onClick={abrirVotacion} 
+                <div className="admin-button-group">
+                    <button
+                        onClick={abrirVotacion}
                         disabled={votacionActiva}
-                        style={{ ...styles.btn, background: votacionActiva ? "#ccc" : "#28a745" }}
+                        className="btn-admin btn-abrir"
                     >
                         🟢 Abrir Votación
                     </button>
-                    
-                    <button 
-                        onClick={cerrarVotacion} 
+
+                    <button
+                        onClick={cerrarVotacion}
                         disabled={!votacionActiva}
-                        style={{ ...styles.btn, background: !votacionActiva ? "#ccc" : "#dc3545" }}
+                        className="btn-admin btn-cerrar"
                     >
                         🔴 Cerrar Votación
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => setMostrarModal(true)}
-                        style={{ ...styles.btn, background: "#007bff" }}
+                        className="btn-admin btn-crear"
                     >
-                        ➕ Crear Pregunta {totalPreguntasExistentes + 1}
+                        ➕ Nueva Pregunta ({totalPreguntasExistentes + 1})
                     </button>
                 </div>
 
-                <p style={styles.status}>
-                    Estado: <b>{votacionActiva ? "RECIBIENDO VOTOS" : "SISTEMA PAUSADO"}</b>
-                </p>
+                <div className={`status-badge ${votacionActiva ? 'status-active' : 'status-paused'}`}>
+                    <span className="status-dot"></span>
+                    {votacionActiva
+                        ? "SISTEMA ACTIVO: RECIBIENDO VOTOS"
+                        : "SISTEMA EN PAUSA: VOTACIÓN CERRADA"}
+                </div>
             </div>
 
             <ModalNuevaPregunta
@@ -127,25 +134,11 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
                 onSave={manejarGuardadoPregunta}
             />
 
-            <hr style={styles.divider} />
-            
-            <HistorialRondas />
+            <hr className="admin-divider" />
+
+            {/* <HistorialRondas /> */}
         </div>
     );
 }
-
-const styles = {
-    container: { marginTop: "20px", fontFamily: "Arial, sans-serif" },
-    title: { color: "#333", borderBottom: "2px solid #007bff", paddingBottom: "10px" },
-    adminCard: { background: "#f8f9fa", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" },
-    section: { marginBottom: "20px" },
-    rondaText: { fontSize: "1.2em", color: "#007bff" },
-    controls: { marginTop: "10px" },
-    select: { padding: "8px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer" },
-    buttonGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
-    btn: { color: "white", border: "none", padding: "10px 20px", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" },
-    status: { marginTop: "15px", fontSize: "0.9em", color: "#666" },
-    divider: { margin: "30px 0", border: "0", borderTop: "1px solid #eee" }
-};
 
 export default PanelAdminVotacion;

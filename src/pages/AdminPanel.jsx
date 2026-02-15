@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, query, where, doc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDoc, getDocs} from "firebase/firestore";
 import { db } from "/src/firebase.js"
 import { apartamentos } from "../data/apartamentos";
+import "../styles/adminPanel.css"
 
-function FilaAsistente({ asistente }) {
+function FilaAsistente({ asistente, todosLosAsistentes }) {
     const [editando, setEditando] = useState(false);
-    const [nuevoApto, setNuevoApto] = useState(String(asistente.apto || ""));
+    const [nuevoApto, setNuevoApto] = useState("");
     const [aptosRepresentados, setAptosRepresentados] = useState([]);
 
     useEffect(() => {
@@ -17,105 +18,124 @@ function FilaAsistente({ asistente }) {
         const unsub = onSnapshot(q, (snapshot) => {
             const datos = snapshot.docs.map(doc => doc.data());
             setAptosRepresentados(datos);
-        })
+        });
 
         return () => unsub();
+    }, [asistente.id]);
 
-    }, [asistente.id])
+const guardarCambio = async () => {
+    if (!asistente.id) return alert("ID no encontrado");
+    if (!nuevoApto.trim()) return alert("Ingresa un número de apartamento");
 
-    const guardarCambio = async () => {
-        if (!asistente.id) return alert("ID no encontrado");
+    try {
+        const listaNuevos = nuevoApto
+            .split(",")
+            .map(a => a.trim())
+            .filter(a => a !== "");
 
-        try {
-            const lista = nuevoApto
-                .split(",")
-                .map(a => a.trim())
-                .filter(a => a !== "");
+        let sumaCoeficienteAAgregar = 0;
+        let aptosExitosos = [];
 
-            const aptosExistentes = new Set([
-                String(asistente.apto),
-                ...aptosRepresentados.map(a => String(a.apto))
-            ]);
-
-            let sumaNueva = 0;
-            let aptosAgregados = [];
-
-            for (let apto of lista) {
-
-                if (aptosExistentes.has(apto)) {
-                    alert(`⚠️ El apartamento ${apto} ya existe`);
-                    continue;
-                }
-
-                const data = apartamentos[apto];
-                if (!data) {
-                    alert(`⚠️ El apartamento ${apto} no existe en coeficientes`);
-                    continue;
-                }
-
-                sumaNueva += data.coeficiente;
-                aptosAgregados.push(apto);
-
-                await addDoc(collection(db, "asistente_apartamentos"), {
-                    asistenteId: asistente.id,
-                    apto: apto,
-                    coeficiente: data.coeficiente
-                });
+        for (let apto of listaNuevos) {
+            // 1. Validar si ya es un asistente principal (Normalizamos a String para comparar)
+            const yaEsPrincipal = todosLosAsistentes.find(asist => String(asist.apto) === String(apto));
+            if (yaEsPrincipal) {
+                alert(`⚠️ El apto ${apto} ya está registrado como asistente principal.`);
+                continue;
             }
 
-            if (aptosAgregados.length === 0) {
-                alert("No se agregó ningún apartamento nuevo");
-                return;
+            // 2. Validar en Firebase (Ojo: si en la DB el 'apto' es número, la consulta fallará si envías string)
+            // Intentamos buscarlo como String, pero si tus registros son números, hay que convertirlo
+            const qValidar = query(
+                collection(db, "asistente_apartamentos"),
+                where("apto", "==", apto) // Asegúrate que el tipo coincida con tu DB
+            );
+            
+            const querySnapshot = await getDocs(qValidar);
+
+            if (!querySnapshot.empty) {
+                alert(`⚠️ El apto ${apto} ya está siendo representado por otro usuario.`);
+                continue;
             }
 
+            // 3. Obtener coeficiente del objeto 'apartamentos'
+            const dataCoef = apartamentos[apto];
+            if (!dataCoef) {
+                alert(`⚠️ El apto ${apto} no existe en la base de datos de coeficientes.`);
+                continue;
+            }
+
+            const valorCoeficiente = Number(dataCoef.coeficiente) || 0;
+            sumaCoeficienteAAgregar += valorCoeficiente;
+            aptosExitosos.push(apto);
+
+            // 4. Registrar la representación
+            await addDoc(collection(db, "asistente_apartamentos"), {
+                asistenteId: asistente.id,
+                apto: apto,
+                coeficiente: valorCoeficiente,
+                fechaRegistro: new Date()
+            });
+        }
+
+        // 5. Actualizar el asistente principal
+        if (aptosExitosos.length > 0) {
             const coefActual = Number(asistente.coeficiente || 0);
-            const nuevoCoef = Number((coefActual + sumaNueva).toFixed(2));
+            const nuevoCoefTotal = Number((coefActual + sumaCoeficienteAAgregar).toFixed(4));
 
             await updateDoc(doc(db, "asistentes", asistente.id), {
-                coeficiente: nuevoCoef
+                coeficiente: nuevoCoefTotal
+                // Si tienes un array de 'apartamentosRepresentados', deberías actualizarlo aquí también
             });
 
-            setEditando(false);
-            setNuevoApto("");
-            alert(`✅ Agregados: ${aptosAgregados.join(", ")}`);
-
-        } catch (e) {
-            console.error(e);
-            alert("Error al guardar");
+            alert(`✅ Se agregaron correctamente: ${aptosExitosos.join(", ")}`);
         }
-    };
-    return (
-        <tr>
-            <td align="center">
-                {editando ? (
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <input
-                            type="text"
-                            value={nuevoApto}
-                            onChange={(e) => setNuevoApto(e.target.value)}
-                            style={{ width: "120px" }}
-                        />
-                        <button onClick={guardarCambio}>✅</button>
-                        <button onClick={() => {
-                            setEditando(false);
-                            setNuevoApto(String(asistente.apto));
-                        }}>❌</button>
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: "0 5px" }}>
-                        <span>{asistente.apto}</span>
-                        <button onClick={() => setEditando(true)} style={{ fontSize: "10px" }}>Agregar Apartamentos</button>
-                    </div>
-                )}
-            </td>
 
-            <td>{asistente.nombre}</td>
-            <td>{aptosRepresentados.map(a => a.apto).join(", ")}</td>
-            <td align="right">
-                <b>{Number(asistente.coeficiente || 0).toFixed(2)}%</b>
-            </td>
-        </tr>
-    );
+        setEditando(false);
+        setNuevoApto("");
+
+    } catch (e) {
+        console.error("Error al guardar apartamentos:", e);
+        alert("Ocurrió un error: " + e.message);
+    }
+};
+
+ return (
+    <tr>
+        <td>
+            {editando ? (
+                <div className="edit-box">
+                    <input
+                        className="input-edit"
+                        type="text"
+                        placeholder="101, 102..."
+                        value={nuevoApto}
+                        onChange={(e) => setNuevoApto(e.target.value)}
+                    />
+                    <button onClick={guardarCambio} className="btn-icon">✅</button>
+                    <button onClick={() => { setEditando(false); setNuevoApto(""); }} className="btn-icon">❌</button>
+                </div>
+            ) : (
+                <div className="apto-display">
+                    <strong>{asistente.apto}</strong>
+                    <button onClick={() => setEditando(true)} className="btn btn-add">
+                        + Representados
+                    </button>
+                </div>
+            )}
+        </td>
+        <td>{asistente.nombre}</td>
+        <td className="representados-list">
+            {aptosRepresentados.length > 0 
+                ? aptosRepresentados.map(a => a.apto).join(", ") 
+                : <span className="muted">Sin representados</span>
+            }
+        </td>
+        <td align="right">
+            <span className="coef-text">{Number(asistente.coeficiente || 0).toFixed(3)}%</span>
+        </td>
+    </tr>
+);
 }
 
 function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
@@ -158,7 +178,6 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
 
             const preguntas = Array.from(preguntasSet).sort((a, b) => a - b);
 
-            // Agrupar por apartamento individual
             const mapa = {};
 
             votos.forEach(v => {
@@ -219,54 +238,56 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     };
 
     return (
-        <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "8px", fontFamily: "sans-serif" }}>
-            <h1>Panel de Administración</h1>
+    <div className="admin-container">
+        <h1 className="admin-title">Panel de Administración</h1>
 
-            <section>
-                <h3>📊 Estado del Quórum</h3>
-                <p>Coeficiente total: <b>{totalCoeficiente.toFixed(2)}%</b></p>
-                <p>{puedeIniciar ? "✅ Quórum para Sesionar" : "❌ Quórum Insuficiente"}</p>
-                <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
-            </section>
-
-            {/* <hr />
-
-            <section>
-                <h3>Resultados Ronda {rondaActual}</h3>
-                <p>Sí: {resultados.si.toFixed(4)}%</p>
-                <p>No: {resultados.no.toFixed(4)}%</p>
-            </section> */}
-
-            <hr />
-
-            <h3>👥 Asistentes ({asistentes.length})</h3>
-            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                <table border="1" width="100%" style={{ borderCollapse: "collapse", fontSize: "14px" }}>
-                    <thead>
-                        <tr style={{ background: "#f4f4f4" }}>
-                            <th style={{ padding: "8px" }}>Apto (Editable)</th>
-                            <th>Nombre</th>
-                            <th>Apartamentos Representados</th>
-                            <th>Coef %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {asistentes.map((a) => (
-                            <FilaAsistente key={a.id} asistente={a} />
-                        ))}
-                    </tbody>
-                </table>
+        <div className="quorum-section">
+            <div className="quorum-card">
+                <h3>Coeficiente Presente</h3>
+                <div className="quorum-value">{totalCoeficiente.toFixed(2)}%</div>
             </div>
-            <hr />
-            <button
-                onClick={exportarCSV}
-                style={{ padding: "8px 12px", cursor: "pointer" }}
-            >
-                📥 Exportar CSV Final
-            </button>
-
+            {/* <div className="quorum-card">
+                <h3>Estado Quórum</h3>
+                <div className={`badge ${puedeIniciar ? 'badge-success' : 'badge-danger'}`}>
+                    {puedeIniciar ? "SESIÓN HABILITADA" : "QUÓRUM INSUFICIENTE"}
+                </div>
+            </div> */}
+            {/* <div className="quorum-card">
+                <h3>Mayoría Calificada</h3>
+                <div className={`badge ${puedeEspecial ? 'badge-success' : 'badge-danger'}`}>
+                    {puedeEspecial ? "70% ALCANZADO" : "MENOR AL 70%"}
+                </div>
+            </div> */}
         </div>
-    );
+
+        <h3>👥 Registro de Asistentes ({asistentes.length})</h3>
+        <div className="table-container">
+            <table className="admin-table">
+                <thead>
+                    <tr>
+                        <th>Unidad Principal</th>
+                        <th>Nombre del Asistente</th>
+                        <th>Apartamentos Representados</th>
+                        <th style={{textAlign: 'right'}}>Coeficiente Ponderado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {asistentes.map((a) => (
+                        <FilaAsistente
+                            key={a.id}
+                            asistente={a}
+                            todosLosAsistentes={asistentes}
+                        />
+                    ))}
+                </tbody>
+            </table>
+        </div>
+
+        <button onClick={exportarCSV} className="btn btn-export">
+            📥 Descargar Acta de Resultados (CSV)
+        </button>
+    </div>
+);
 }
 
 export default AdminPanel

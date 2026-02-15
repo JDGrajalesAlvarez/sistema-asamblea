@@ -1,65 +1,105 @@
 .card-Pregunta {
-    background-color: #042542;
-    color: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    background: white; /* Cambiamos de oscuro a blanco */
+    border: 1px solid #e2e8f0;
+    border-radius: 16px; /* Mismo radio que el historial */
+    padding: 30px;
+    margin: 20px auto 40px auto;
+    max-width: 800px; /* Para que no sea tan ancha y sea fácil de leer */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    transition: transform 0.2s ease;
+    gap: 20px;
+    transition: all 0.3s ease;
 }
 
 .card-Pregunta:hover {
     transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .card-Pregunta h3 {
     margin: 0;
-    font-size: 1.1rem;
-    color: #00d4ff; 
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
+    font-size: 0.85rem;
+    color: #3b82f6; /* Azul corporativo igual que el badge de ronda */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #eff6ff;
+    padding: 4px 12px;
+    border-radius: 6px;
+    align-self: flex-start; /* No ocupa todo el ancho */
 }
 
 .card-Pregunta p {
-    font-size: 1rem;
+    font-size: 1.25rem; /* Pregunta más grande y legible */
+    font-weight: 600;
     line-height: 1.5;
-    margin: 5px 0;
+    color: #1e293b;
+    margin: 10px 0;
 }
 
 .botones-container {
     display: flex;
-    gap: 10px; 
+    gap: 15px; 
     width: 100%;
+    margin-top: 10px;
 }
 
 .botones-container button {
     flex: 1; 
-    padding: 12px;
+    padding: 15px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    transition: background 0.3s ease;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
+/* Botón SÍ */
 .botones-container button:first-child {
-    background-color: #28a745;
+    background-color: #16a34a;
     color: white;
 }
 
+/* Botón NO */
 .botones-container button:last-child {
-    background-color: #dc3545;
+    background-color: #dc2626;
     color: white;
 }
 
-.botones-container button:hover {
-    filter: brightness(1.2); 
+/* Efectos */
+.botones-container button:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
 }
 
 .botones-container button:active {
-    transform: scale(0.98); 
+    transform: scale(0.95); 
+}
+
+.botones-container button:disabled {
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 480px) {
+    .botones-container {
+        flex-direction: column;
+    }
+    .card-Pregunta p {
+        font-size: 1.1rem;
+    }
+}
+
+.title-votacion{
+    color: white;
+}
+.apt-votacion{
+      color: white;
 }
