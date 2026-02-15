@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apartamentos } from "./data/apartamentos";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { db } from "./firebase";
+import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
@@ -19,6 +20,7 @@ function App() {
   const [totalCoeficiente, setTotalCoeficiente] = useState(0);
   const [rondaActual, setRondaActual] = useState(null);
   const [votacionActiva, setVotacionActiva] = useState(true);
+  // const [hayQuorum, setHayQuorum] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -110,6 +112,11 @@ function App() {
 
     const aptoNumero = Number(apto);
 
+    if (isNaN(aptoNumero)) {
+      alert("Apartamento inválido");
+      return;
+    }
+
     const asistente = asistentes.find(a => a.apto === aptoNumero);
 
     if (!asistente) {
@@ -142,7 +149,7 @@ function App() {
     return <h2>Cargand sesion...</h2>
   }
 
-   return (
+  return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
       <Routes>
         <Route
@@ -187,7 +194,7 @@ function App() {
         } />
         <Route path="/qr" element={<AdminQR />} />
       </Routes>
-       
+
     </div>
   );
 }

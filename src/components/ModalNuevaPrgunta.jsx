@@ -6,7 +6,7 @@ const ModalNuevaPregunta = ({ isOpen, onClose, onSave }) => {
     if (!isOpen) return null;
 
     return (
-     <div className="modal">
+        <div className="modal">
             <input value={input} onChange={(e) => setInput(e.target.value)} />
             <button onClick={() => onSave(input)}>Guardar</button>
             <button onClick={onClose}>Cancelar</button>

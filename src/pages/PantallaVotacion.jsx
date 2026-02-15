@@ -49,12 +49,12 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
                     <p>Por favor, espere a que el administrador inicie la siguiente pregunta.</p>
                 </div>
             ) : preguntaActiva ? (
-                <CardsPreguntas 
-                    key={preguntaActiva.id} 
-                    numero={preguntaActiva.ronda} 
-                    texto={preguntaActiva.texto} 
-                    onVotar={onVotar} 
-                    aptoSesion={aptoSesion} 
+                <CardsPreguntas
+                    key={preguntaActiva.id}
+                    numero={preguntaActiva.ronda}
+                    texto={preguntaActiva.texto}
+                    onVotar={onVotar}
+                    aptoSesion={aptoSesion}
                 />
             ) : (
                 <p>No hay una pregunta configurada para esta ronda.</p>
