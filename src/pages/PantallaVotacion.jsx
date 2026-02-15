@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { doc, onSnapshot } from "firebase/firestore"
-import CardsPreguntas from "../components/CardsPreguntas"
 import { db } from "../firebase"
+import CardsPreguntas from "../components/CardsPreguntas"
 
 const PREGUNTAS_ESTATICAS = [
     "¿Aprueban los estados financieros del periodo 2025?",
@@ -21,6 +21,9 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
             if (docSnap.exists()) {
                 setPreguntasDinamicas(docSnap.data().extras || []);
             }
+            if (!aptoSesion) {
+                return <h2>Sesión no válida</h2>
+            }
         });
         return () => unsub();
     }, []);
@@ -32,7 +35,6 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
             {todasLasPreguntas.map((texto, index) => (
                 <CardsPreguntas key={index} numero={index + 1} texto={texto} onVotar={onVotar} aptoSesion={aptoSesion} />
             ))}
-
         </div>
     )
 }

@@ -6,7 +6,7 @@ function HistorialRondas() {
     const [resumenRondas, setResumenRondas] = useState({})
 
     useEffect(() => {
-        const unsub = onSnapshot(collection(db, "votos"), (snapshot) => {
+        const unsub = onSnapshot(collection(db, "votacion"), (snapshot) => {
             const acumulado = {}
 
             snapshot.forEach(doc => {

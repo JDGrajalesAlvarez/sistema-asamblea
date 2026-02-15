@@ -45,7 +45,7 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
             });
             console.log("Se guardo en firebase", textoPregunta);
             setMostrarModal(false);
-        } catch(e){
+        } catch (e) {
             console.error("error al guardar", e)
         }
     };
