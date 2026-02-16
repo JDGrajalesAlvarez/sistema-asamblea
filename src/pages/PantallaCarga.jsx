@@ -41,7 +41,7 @@ function PantallaCarga() {
             <img
                 src={imagenDeCarga}
                 alt="Pantalla de Carga"
-                style={{ width: "500px" }}
+                style={{ width: "750px" }}
             />
 
             <h2>Esperando quórum...</h2>

@@ -53,6 +53,7 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
                     texto={preguntaActiva.texto}
                     onVotar={onVotar}
                     aptoSesion={aptoSesion}
+                    rondaActual={preguntaActiva.ronda}
                 />
             ) : (
                 <p>No hay una pregunta configurada para esta ronda.</p>

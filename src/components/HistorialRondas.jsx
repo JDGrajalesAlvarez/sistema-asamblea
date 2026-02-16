@@ -43,10 +43,10 @@ function HistorialRondas() {
             {Object.entries(resumenRondas).sort((a, b) => b[0] - a[0]).map(([ronda, datos]) => (
                 <div key={ronda} style={styles.card}>
                     <h4>Pregunta {ronda}: {textosPreguntas[ronda] || "Cargando..."}</h4>
-                    <p>✅ Sí: <b>{((datos.si / datos.total) * 100 || 0).toFixed(2)}%</b> ({datos.si.toFixed(4)})</p>
-                    <p>❌ No: <b>{((datos.no / datos.total) * 100 || 0).toFixed(2)}%</b> ({datos.no.toFixed(4)})</p>
+                    <p>✅ Sí: <b>{((datos.si / datos.total) * 100 || 0)}%</b> ({datos.si.toFixed(2)})</p>
+                    <p>❌ No: <b>{((datos.no / datos.total) * 100 || 0)}%</b> ({datos.no.toFixed(2)})</p>
                     <div style={styles.barraTotal}>
-                        Total Coeficiente Votante: {datos.total.toFixed(4)}
+                        Total Coeficiente Votante: {datos.total.toFixed(2)}
                     </div>
                 </div>
             ))}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, where, doc, updateDoc, addDoc } from "firebase/firestore";
 import { db } from "/src/firebase.js"
 import { apartamentos } from "../data/apartamentos";
+import { getDocs } from "firebase/firestore";
 
 function FilaAsistente({ asistente }) {
     const [editando, setEditando] = useState(false);
@@ -145,18 +146,18 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
 
     const exportarCSV = async () => {
         try {
-            const snapshot = await getDocs(collection(db, "votos"));
+            const snapshot = await getDocs(collection(db, "votacion"));
 
             const votos = [];
-            const preguntasSet = new Set();
+            const rondasSet = new Set();
 
             snapshot.forEach(docSnap => {
                 const v = docSnap.data();
-                preguntasSet.add(v.pregunta);
+                rondasSet.add(v.ronda);
                 votos.push(v);
             });
 
-            const preguntas = Array.from(preguntasSet).sort((a, b) => a - b);
+            const rondas = Array.from(rondasSet).sort((a, b) => a - b);
 
             // Agrupar por apartamento individual
             const mapa = {};
@@ -168,53 +169,64 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                     .filter(a => a !== "");
 
                 aptos.forEach(apto => {
+
                     const key = `${v.nombre}-${apto}`;
 
                     if (!mapa[key]) {
                         mapa[key] = {
                             nombre: v.nombre,
                             apto: apto,
+                            coeficiente: v.coeficiente,
                             respuestas: {}
                         };
                     }
 
-                    mapa[key].respuestas[v.pregunta] = v.opcion;
+                    mapa[key].respuestas[v.ronda] = v.opcion;
                 });
             });
 
-            // Construcción del CSV
+            // Construcción del CSV (formato CSV2 con ;)
             let filas = [];
 
-            const encabezado = ["Nombre", "Apto", ...preguntas.map(p => `P${p}`)];
+            const encabezado = [
+                "Nombre",
+                "Apto",
+                "Coeficiente",
+                ...rondas.map(r => `Ronda ${r}`)
+            ];
+
             filas.push(encabezado);
 
             Object.values(mapa).forEach(registro => {
+
                 const fila = [
                     registro.nombre,
                     registro.apto,
-                    ...preguntas.map(p => registro.respuestas[p] || "")
+                    registro.coeficiente,
+                    ...rondas.map(r => registro.respuestas[r] || "")
                 ];
-
 
                 filas.push(fila);
             });
 
             const contenido = "\uFEFF" + filas.map(f => f.join(";")).join("\n");
 
-            const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+            const blob = new Blob([contenido], {
+                type: "text/csv;charset=utf-8;"
+            });
+
             const url = URL.createObjectURL(blob);
 
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", "resultados_votacion.csv");
+            link.setAttribute("download", "resultados_votacion_csv2.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-
         } catch (error) {
             console.error(error);
-            alert("Error al exportar CSV");
+            alert("Error al exportar CSV2");
         }
     };
 
@@ -228,16 +240,6 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                 <p>{puedeIniciar ? "✅ Quórum para Sesionar" : "❌ Quórum Insuficiente"}</p>
                 <p>{puedeEspecial ? "🗳️ Quórum para Decisiones Especiales (70%)" : "🚫 No alcanza para decisiones especiales"}</p>
             </section>
-
-            {/* <hr />
-
-            <section>
-                <h3>Resultados Ronda {rondaActual}</h3>
-                <p>Sí: {resultados.si.toFixed(4)}%</p>
-                <p>No: {resultados.no.toFixed(4)}%</p>
-            </section> */}
-
-            <hr />
 
             <h3>👥 Asistentes ({asistentes.length})</h3>
             <div style={{ maxHeight: "300px", overflowY: "auto" }}>

@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { apartamentos } from "./data/apartamentos";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import PantallaVotacion from "./pages/PantallaVotacion";
 import AdminPanel from "./pages/AdminPanel";
 import PanelAdminVotacion from "./components/PanelAdminVotacion";
-import { query, where, getDocs, doc, collection, addDoc, onSnapshot } from "firebase/firestore";
+import { query, where, getDocs, setDoc, getDoc, doc, collection, addDoc, onSnapshot } from "firebase/firestore";
 import RegistroAsistente from "./pages/RegistroAsistente"
 import AdminQR from "./pages/AdminQR"
 import PantallaCarga from "./pages/PantallaCarga";
+import "../src/App.css"
 
 function App() {
   const [aptoSesion, setAptoSesion] = useState(null);
@@ -96,53 +96,40 @@ function App() {
 
     if (!apto) {
       alert("Sesión no válida");
-      return;
+      return false;
     }
 
     if (!rondaActual) {
       alert("Ronda no disponible");
-      return;
+      return false;
     }
 
     if (!votacionActiva) {
       alert("La votación está cerrada");
-      return;
+      return false;
     }
 
     const aptoNumero = Number(apto);
+    const votoId = `${aptoNumero}_${rondaActual}`;
+    const votoRef = doc(db, "votacion", votoId);
 
-    if (isNaN(aptoNumero)) {
-      alert("Apartamento inválido");
-      return;
+    const votoExistente = await getDoc(votoRef);
+
+    if (votoExistente.exists()) {
+      alert("Ya votaste en esta ronda 🚫");
+      return false;
     }
 
-    const asistente = asistentes.find(a => a.apto === aptoNumero);
-
-    if (!asistente) {
-      alert("Este apartamento no registró asistencia");
-      return;
-    }
-
-    const q = query(
-      collection(db, "votacion"),
-      where("ronda", "==", rondaActual),
-      where("apto", "==", aptoNumero)
-    );
-
-    const snapshot = await getDocs(q);
-
-    await addDoc(collection(db, "votacion"), {
+    await setDoc(votoRef, {
       ronda: rondaActual,
-      apto: asistente.apto,
-      nombre: asistente.nombre,   // ✅ CORRECTO
-      coeficiente: asistente.coeficiente,
+      apto: aptoNumero,
       opcion,
       fecha: new Date()
     });
 
-
     alert("Voto registrado con éxito ✅");
-  }
+    return true;
+  };
 
   if (cargandoSesion) {
     return <h2>Cargand sesion...</h2>
