@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 const ModalNuevaPregunta = ({ isOpen, onClose, onSave }) => {
     const [input, setInput] = useState("");
 
-    if (!isOpen) return null; // Si no está abierto, no renderiza nada
+    if (!isOpen) return null;
 
     return (
         <div className="modal">

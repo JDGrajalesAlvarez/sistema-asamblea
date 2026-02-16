@@ -9,7 +9,7 @@ import { query, where, getDocs, setDoc, getDoc, doc, collection, addDoc, onSnaps
 import RegistroAsistente from "./pages/RegistroAsistente"
 import AdminQR from "./pages/AdminQR"
 import PantallaCarga from "./pages/PantallaCarga";
-import "../src/App.css"
+import "./styles/app.css"
 
 function App() {
   const [aptoSesion, setAptoSesion] = useState(null);
