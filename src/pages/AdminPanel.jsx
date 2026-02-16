@@ -132,7 +132,7 @@ function FilaAsistente({ asistente, todosLosAsistentes }) {
                 }
             </td>
             <td align="right">
-                <span className="coef-text">{Number(asistente.coeficiente || 0).toFixed(3)}%</span>
+                <span className="coef-text">{Number(asistente.coeficiente || 0).toFixed(2)}%</span>
             </td>
         </tr>
     );
@@ -146,31 +146,48 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     useEffect(() => {
         if (!rondaActual) return;
 
-        const q = query(collection(db, "votacion"), where("ronda", "==", rondaActual));
+        // 🔥 Resetear antes de escuchar
+        setResultados({ si: 0, no: 0, blanco: 0 });
+
+        const q = query(
+            collection(db, "votacion"),
+            where("ronda", "==", rondaActual)
+        );
+
         const unsub = onSnapshot(q, (snapshot) => {
             let si = 0, no = 0, blanco = 0;
+
             snapshot.forEach(doc => {
                 const v = doc.data();
                 const coef = Number(v.coeficiente) || 0;
+
                 if (v.opcion === "si") si += coef;
                 if (v.opcion === "no") no += coef;
                 if (v.opcion === "blanco") blanco += coef;
             });
+
             setResultados({ si, no, blanco });
         });
 
         return () => unsub();
     }, [rondaActual]);
 
-
     const exportarCSV = async () => {
         try {
-            const snapshot = await getDocs(collection(db, "votacion"));
+            const snapshotVotos = await getDocs(collection(db, "votacion"));
+            const snapshotAsistentes = await getDocs(collection(db, "asistentes"));
+
+            // Crear mapa apto -> nombre
+            const mapaAsistentes = {};
+            snapshotAsistentes.forEach(docSnap => {
+                const data = docSnap.data();
+                mapaAsistentes[String(data.apto)] = data.nombre;
+            });
 
             const votos = [];
             const rondasSet = new Set();
 
-            snapshot.forEach(docSnap => {
+            snapshotVotos.forEach(docSnap => {
                 const v = docSnap.data();
                 rondasSet.add(v.ronda);
                 votos.push(v);
@@ -181,29 +198,24 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
             const mapa = {};
 
             votos.forEach(v => {
-                const aptos = String(v.apto)
-                    .split(",")
-                    .map(a => a.trim())
-                    .filter(a => a !== "");
+                const apto = String(v.apto);
 
-                aptos.forEach(apto => {
+                const nombre = mapaAsistentes[apto] || "Sin nombre";
 
-                    const key = `${v.nombre}-${apto}`;
+                const key = `${nombre}-${apto}`;
 
-                    if (!mapa[key]) {
-                        mapa[key] = {
-                            nombre: v.nombre,
-                            apto: apto,
-                            coeficiente: v.coeficiente,
-                            respuestas: {}
-                        };
-                    }
+                if (!mapa[key]) {
+                    mapa[key] = {
+                        nombre,
+                        apto,
+                        coeficiente: v.coeficiente,
+                        respuestas: {}
+                    };
+                }
 
-                    mapa[key].respuestas[v.ronda] = v.opcion;
-                });
+                mapa[key].respuestas[v.ronda] = v.opcion;
             });
 
-            // Construcción del CSV (formato CSV2 con ;)
             let filas = [];
 
             const encabezado = [
@@ -216,7 +228,6 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
             filas.push(encabezado);
 
             Object.values(mapa).forEach(registro => {
-
                 const fila = [
                     registro.nombre,
                     registro.apto,
@@ -237,16 +248,17 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
 
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", "resultados_votacion_csv2.csv");
+            link.setAttribute("download", "resultados_votacion.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
         } catch (error) {
             console.error(error);
-            alert("Error al exportar CSV2");
+            alert("Error al exportar CSV");
         }
     };
+
 
     return (
         <div className="admin-container">
@@ -257,18 +269,6 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                     <h3>Coeficiente Presente</h3>
                     <div className="quorum-value">{totalCoeficiente.toFixed(2)}%</div>
                 </div>
-                {/* <div className="quorum-card">
-                <h3>Estado Quórum</h3>
-                <div className={`badge ${puedeIniciar ? 'badge-success' : 'badge-danger'}`}>
-                    {puedeIniciar ? "SESIÓN HABILITADA" : "QUÓRUM INSUFICIENTE"}
-                </div>
-            </div> */}
-                {/* <div className="quorum-card">
-                <h3>Mayoría Calificada</h3>
-                <div className={`badge ${puedeEspecial ? 'badge-success' : 'badge-danger'}`}>
-                    {puedeEspecial ? "70% ALCANZADO" : "MENOR AL 70%"}
-                </div>
-            </div> */}
             </div>
 
             <h3>👥 Registro de Asistentes ({asistentes.length})</h3>
@@ -276,7 +276,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                 <table className="admin-table">
                     <thead>
                         <tr>
-                            <th>Unidad Principal</th>
+                            <th>Apto Principal</th>
                             <th>Nombre del Asistente</th>
                             <th>Apartamentos Representados</th>
                             <th style={{ textAlign: 'right' }}>Coeficiente Ponderado</th>

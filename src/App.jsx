@@ -28,7 +28,11 @@ function App() {
         if (docSnap.exists()) {
           const data = docSnap.data();
 
-          setRondaActual(Number(data.rondaActual) || 1);
+          setRondaActual(
+            data.rondaActual !== undefined
+              ? Number(data.rondaActual)
+              : null
+          );
           setVotacionActiva(Boolean(data.votacionActiva));
         } else {
           setRondaActual(1);
@@ -60,6 +64,8 @@ function App() {
     })
     return () => unsub();
   }, []);
+
+
 
   const registrarAsistente = async (nombre, apto) => {
     try {
@@ -99,6 +105,15 @@ function App() {
       return false;
     }
 
+    const aptoNumero = Number(apto); // 👈 PRIMERO DECLARAS
+
+    const asistente = asistentes.find(a => a.apto === aptoNumero); // 👈 DESPUÉS LO USAS
+
+    if (!asistente) {
+      alert("Este apartamento no registró asistencia");
+      return false;
+    }
+
     if (!rondaActual) {
       alert("Ronda no disponible");
       return false;
@@ -109,7 +124,6 @@ function App() {
       return false;
     }
 
-    const aptoNumero = Number(apto);
     const votoId = `${aptoNumero}_${rondaActual}`;
     const votoRef = doc(db, "votacion", votoId);
 
@@ -124,12 +138,14 @@ function App() {
       ronda: rondaActual,
       apto: aptoNumero,
       opcion,
+      coeficiente: asistente.coeficiente,
       fecha: new Date()
     });
 
     alert("Voto registrado con éxito ✅");
     return true;
   };
+
 
   if (cargandoSesion) {
     return <h2>Cargand sesion...</h2>

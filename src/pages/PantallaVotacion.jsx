@@ -10,27 +10,75 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
     const [loading, setLoading] = useState(true);
     const [votacionAbierta, setVotacionAbierta] = useState(false);
 
+    // useEffect(() => {
+    //     const unsubConfig = onSnapshot(
+    //         doc(db, "configuracion", "estadoVotacion"),
+    //         async (docSnap) => {
+
+    //             if (docSnap.exists()) {
+    //                 const data = docSnap.data();
+    //                 const rondaActual = data.rondaActual;
+    //                 setVotacionAbierta(data.votacionActiva);
+
+    //                 if (rondaActual !== undefined && rondaActual !== null) {
+    //                     const preguntaRef = doc(db, "preguntas", String(rondaActual));
+    //                     const preguntaSnap = await getDoc(preguntaRef);
+
+    //                     if (preguntaSnap.exists()) {
+    //                         setPreguntaActiva({
+    //                             id: rondaActual,
+    //                             ...preguntaSnap.data()
+    //                         });
+    //                     } else {
+    //                         setPreguntaActiva(null);
+    //                     }
+    //                 }
+    //             }
+    //             setLoading(false);
+    //         });
+
+    //     return () => unsubConfig();
+    // }, []);
+
+
     useEffect(() => {
-        const unsubConfig = onSnapshot(doc(db, "configuracion", "estadoVotacion"), async (docSnap) => {
-            if (docSnap.exists()) {
+        const unsubConfig = onSnapshot(
+            doc(db, "configuracion", "estadoVotacion"),
+            async (docSnap) => {
+
+                if (!docSnap.exists()) {
+                    setPreguntaActiva(null);
+                    setVotacionAbierta(false);
+                    setLoading(false);
+                    return;
+                }
+
                 const data = docSnap.data();
                 const rondaActual = data.rondaActual;
-                setVotacionAbierta(data.votacionActiva);
 
-                if (rondaActual) {
-                    const preguntaRef = doc(db, "preguntas", String(rondaActual));
-                    const preguntaSnap = await getDoc(preguntaRef);
+                setVotacionAbierta(Boolean(data.votacionActiva));
 
-                    if (preguntaSnap.exists()) {
-                        setPreguntaActiva({
-                            id: rondaActual,
-                            ...preguntaSnap.data()
-                        });
-                    }
+                if (!rondaActual) {
+                    setPreguntaActiva(null);
+                    setLoading(false);
+                    return;
                 }
+
+                const preguntaRef = doc(db, "preguntas", String(rondaActual));
+                const preguntaSnap = await getDoc(preguntaRef);
+
+                if (preguntaSnap.exists()) {
+                    setPreguntaActiva({
+                        id: rondaActual,
+                        ...preguntaSnap.data()
+                    });
+                } else {
+                    setPreguntaActiva(null);
+                }
+
+                setLoading(false);
             }
-            setLoading(false);
-        });
+        );
 
         return () => unsubConfig();
     }, []);
@@ -61,7 +109,7 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
                 <p>No hay una pregunta configurada para esta ronda.</p>
             )}
 
-            <HistorialRondas/>
+            <HistorialRondas rondaActual={preguntaActiva?.id} />
         </div>
     );
 }

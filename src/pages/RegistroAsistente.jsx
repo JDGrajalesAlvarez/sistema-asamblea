@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import "../styles/Registro.css"
 
 function RegistroAsistente({ onRegistrar }) {
     const [nombre, setNombre] = useState("")
@@ -22,45 +23,38 @@ function RegistroAsistente({ onRegistrar }) {
     }
 
     return (
-        <div style={{
-            maxWidth: "400px",
-            margin: "auto",
-            marginTop: "60px",
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px"
-        }}>
-            <h2 style={{ textAlign: "center" }}>
-                📋 Registro de Asistencia
-            </h2>
+        <div className="contenedor">
+            <div className="card">
+                <h2>Registro de Asistencia</h2>
 
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Nombre completo"
-                    value={nombre}
-                    onChange={e => setNombre(e.target.value)}
-                    required
-                    style={{ width: "100%", marginBottom: "10px" }}
-                />
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        placeholder="Nombre completo"
+                        value={nombre}
+                        onChange={e => setNombre(e.target.value)}
+                        required
+                        className="input"
+                    />
 
-                <input
-                    type="number"
-                    placeholder="Número de apartamento"
-                    value={apto}
-                    onChange={e => setApto(e.target.value)}
-                    required
-                    style={{ width: "100%", marginBottom: "15px" }}
-                />
+                    <input
+                        type="number"
+                        placeholder="Número de apartamento"
+                        value={apto}
+                        onChange={e => setApto(e.target.value)}
+                        required
+                        className="input"
+                    />
 
-                <button
-                    type="submit"
-                >
-                    Registrar
-                </button>
-            </form>
+                    <button type="submit" className="button">
+                        Registrar
+                    </button>
+                </form>
+            </div>
         </div>
-    )
+    );
+
+
 }
 
 export default RegistroAsistente
