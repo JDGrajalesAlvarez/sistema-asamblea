@@ -4,7 +4,7 @@ import "../styles/Qr.css"
 
 function AdminQR() {
 
-    const url = "https://juan-y-cristian-project-2026.vercel.app/registro";
+    const url = "https://sistema-asamblea.vercel.app/registro";
 
     return (
         <div className="qr-container">
