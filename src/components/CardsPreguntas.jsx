@@ -1,4 +1,4 @@
-import "../styles/CardsPreguntas.css"
+import "../styles/cardsPreguntas.css"
 import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";

@@ -3,7 +3,7 @@ import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "firebase/fi
 import HistorialRondas from "../components/HistorialRondas";
 import ModalNuevaPregunta from './ModalNuevaPrgunta';
 import { useState, useEffect } from "react";
-import "../styles/adminPanelVotacion.css"
+import "../styles/AdminPanelVotacion.css"
 
 function PanelAdminVotacion({ rondaActual, votacionActiva }) {
     const [mostrarModal, setMostrarModal] = useState(false);

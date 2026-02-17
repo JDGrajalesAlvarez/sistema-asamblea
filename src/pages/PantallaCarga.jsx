@@ -3,7 +3,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import imagenDeCarga from "../assets/imagenDeCarga.gif";
-import "../styles/PantallaCarga.css";
+import "../styles/pantallaCarga.css";
 
 function PantallaCarga() {
 
