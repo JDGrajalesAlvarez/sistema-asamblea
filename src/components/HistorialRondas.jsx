@@ -73,7 +73,7 @@ function HistorialRondas({ rondaActual }) {
                                     <div className="resultado-fila">
                                         <div className="label-data">
                                             <span>✅ A Favor</span>
-                                            <span>{porcSi.toFixed(1)}%</span>
+                                            <span>{porcSi.toFixed(2)}%</span>
                                         </div>
                                         <div className="progress-bar-container">
                                             <div className="progress-fill fill-si" style={{ width: `${porcSi}%` }}></div>
@@ -84,7 +84,7 @@ function HistorialRondas({ rondaActual }) {
                                     <div className="resultado-fila">
                                         <div className="label-data">
                                             <span>❌ En Contra</span>
-                                            <span>{porcNo.toFixed(1)}%</span>
+                                            <span>{porcNo.toFixed(2)}%</span>
                                         </div>
                                         <div className="progress-bar-container">
                                             <div className="progress-fill fill-no" style={{ width: `${porcNo}%` }}></div>
@@ -97,10 +97,7 @@ function HistorialRondas({ rondaActual }) {
                                         Apartamentos que votaron: <strong>{datos.conteo}</strong>
                                     </div>
                                     <div className="coeficiente-info">
-                                        <p>Coeficiente total: {datos.totalCoeficiente.toFixed(1)}%</p>
-                                        {porcBlanco > 0 && (
-                                            <p className="blanco-text">Abstención/Blanco: {porcBlanco.toFixed(1)}%</p>
-                                        )}
+                                        <p>Coeficiente total: {datos.totalCoeficiente.toFixed(2)}%</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDoc, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDocs } from "firebase/firestore";
 import { db } from "/src/firebase.js"
 import { apartamentos } from "../data/apartamentos";
 import "../styles/adminPanel.css"
@@ -14,12 +14,10 @@ function FilaAsistente({ asistente, todosLosAsistentes }) {
             collection(db, "asistente_apartamentos"),
             where("asistenteId", "==", asistente.id)
         );
-
         const unsub = onSnapshot(q, (snapshot) => {
             const datos = snapshot.docs.map(doc => doc.data());
             setAptosRepresentados(datos);
         });
-
         return () => unsub();
     }, [asistente.id]);
 
@@ -28,48 +26,30 @@ function FilaAsistente({ asistente, todosLosAsistentes }) {
         if (!nuevoApto.trim()) return alert("Ingresa un número de apartamento");
 
         try {
-            const listaNuevos = nuevoApto
-                .split(",")
-                .map(a => a.trim())
-                .filter(a => a !== "");
-
+            const listaNuevos = nuevoApto.split(",").map(a => a.trim()).filter(a => a !== "");
             let sumaCoeficienteAAgregar = 0;
             let aptosExitosos = [];
 
             for (let apto of listaNuevos) {
-                // 1. Validar si ya es un asistente principal (Normalizamos a String para comparar)
                 const yaEsPrincipal = todosLosAsistentes.find(asist => String(asist.apto) === String(apto));
                 if (yaEsPrincipal) {
                     alert(`⚠️ El apto ${apto} ya está registrado como asistente principal.`);
                     continue;
                 }
-
-                // 2. Validar en Firebase (Ojo: si en la DB el 'apto' es número, la consulta fallará si envías string)
-                // Intentamos buscarlo como String, pero si tus registros son números, hay que convertirlo
-                const qValidar = query(
-                    collection(db, "asistente_apartamentos"),
-                    where("apto", "==", apto) // Asegúrate que el tipo coincida con tu DB
-                );
-
+                const qValidar = query(collection(db, "asistente_apartamentos"), where("apto", "==", apto));
                 const querySnapshot = await getDocs(qValidar);
-
                 if (!querySnapshot.empty) {
                     alert(`⚠️ El apto ${apto} ya está siendo representado por otro usuario.`);
                     continue;
                 }
-
-                // 3. Obtener coeficiente del objeto 'apartamentos'
                 const dataCoef = apartamentos[apto];
                 if (!dataCoef) {
-                    alert(`⚠️ El apto ${apto} no existe en la base de datos de coeficientes.`);
+                    alert(`⚠️ El apto ${apto} no existe.`);
                     continue;
                 }
-
                 const valorCoeficiente = Number(dataCoef.coeficiente) || 0;
                 sumaCoeficienteAAgregar += valorCoeficiente;
                 aptosExitosos.push(apto);
-
-                // 4. Registrar la representación
                 await addDoc(collection(db, "asistente_apartamentos"), {
                     asistenteId: asistente.id,
                     apto: apto,
@@ -78,26 +58,15 @@ function FilaAsistente({ asistente, todosLosAsistentes }) {
                 });
             }
 
-            // 5. Actualizar el asistente principal
             if (aptosExitosos.length > 0) {
                 const coefActual = Number(asistente.coeficiente || 0);
                 const nuevoCoefTotal = Number((coefActual + sumaCoeficienteAAgregar).toFixed(4));
-
-                await updateDoc(doc(db, "asistentes", asistente.id), {
-                    coeficiente: nuevoCoefTotal
-                    // Si tienes un array de 'apartamentosRepresentados', deberías actualizarlo aquí también
-                });
-
-                alert(`✅ Se agregaron correctamente: ${aptosExitosos.join(", ")}`);
+                await updateDoc(doc(db, "asistentes", asistente.id), { coeficiente: nuevoCoefTotal });
+                alert(`✅ Se agregaron: ${aptosExitosos.join(", ")}`);
             }
-
             setEditando(false);
             setNuevoApto("");
-
-        } catch (e) {
-            console.error("Error al guardar apartamentos:", e);
-            alert("Ocurrió un error: " + e.message);
-        }
+        } catch (e) { alert("Error: " + e.message); }
     };
 
     return (
@@ -105,172 +74,130 @@ function FilaAsistente({ asistente, todosLosAsistentes }) {
             <td>
                 {editando ? (
                     <div className="edit-box">
-                        <input
-                            className="input-edit"
-                            type="text"
-                            placeholder="101, 102..."
-                            value={nuevoApto}
-                            onChange={(e) => setNuevoApto(e.target.value)}
-                        />
+                        <input className="input-edit" type="text" value={nuevoApto} onChange={(e) => setNuevoApto(e.target.value)} />
                         <button onClick={guardarCambio} className="btn-icon">✅</button>
-                        <button onClick={() => { setEditando(false); setNuevoApto(""); }} className="btn-icon">❌</button>
+                        <button onClick={() => setEditando(false)} className="btn-icon">❌</button>
                     </div>
                 ) : (
                     <div className="apto-display">
                         <strong>{asistente.apto}</strong>
-                        <button onClick={() => setEditando(true)} className="btn btn-add">
-                            + Representados
-                        </button>
+                        <button onClick={() => setEditando(true)} className="btn btn-add">+ Representados</button>
                     </div>
                 )}
             </td>
             <td>{asistente.nombre}</td>
             <td className="representados-list">
-                {aptosRepresentados.length > 0
-                    ? aptosRepresentados.map(a => a.apto).join(", ")
-                    : <span className="muted">Sin representados</span>
-                }
+                {aptosRepresentados.length > 0 ? aptosRepresentados.map(a => a.apto).join(", ") : "Sin representados"}
             </td>
-            <td align="right">
-                <span className="coef-text">{Number(asistente.coeficiente || 0).toFixed(2)}%</span>
-            </td>
+            <td align="right">{Number(asistente.coeficiente || 0).toFixed(2)}%</td>
         </tr>
     );
 }
 
 function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
-    const puedeIniciar = totalCoeficiente >= 50;
-    const puedeEspecial = totalCoeficiente >= 70;
     const [resultados, setResultados] = useState({ si: 0, no: 0, blanco: 0 });
 
     useEffect(() => {
         if (!rondaActual) return;
-
-        // 🔥 Resetear antes de escuchar
-        setResultados({ si: 0, no: 0, blanco: 0 });
-
-        const q = query(
-            collection(db, "votacion"),
-            where("ronda", "==", rondaActual)
-        );
-
+        const q = query(collection(db, "votacion"), where("ronda", "==", rondaActual));
         const unsub = onSnapshot(q, (snapshot) => {
             let si = 0, no = 0, blanco = 0;
-
             snapshot.forEach(doc => {
                 const v = doc.data();
                 const coef = Number(v.coeficiente) || 0;
-
                 if (v.opcion === "si") si += coef;
                 if (v.opcion === "no") no += coef;
                 if (v.opcion === "blanco") blanco += coef;
             });
-
             setResultados({ si, no, blanco });
         });
-
         return () => unsub();
     }, [rondaActual]);
 
-    const exportarCSV = async () => {
-        try {
-            const snapshotVotos = await getDocs(collection(db, "votacion"));
-            const snapshotAsistentes = await getDocs(collection(db, "asistentes"));
+const exportarCSV = async () => {
+    try {
+        const [snapshotVotos, snapshotRepresentados] = await Promise.all([
+            getDocs(collection(db, "votacion")),
+            getDocs(collection(db, "asistente_apartamentos"))
+        ]);
 
-            // Crear mapa apto -> nombre
-            const mapaAsistentes = {};
-            snapshotAsistentes.forEach(docSnap => {
-                const data = docSnap.data();
-                mapaAsistentes[String(data.apto)] = data.nombre;
-            });
+        const mapaRepresentados = {};
+        snapshotRepresentados.forEach(docSnap => {
+            const data = docSnap.data();
+            const idAsis = data.asistenteId; 
+            if (!mapaRepresentados[idAsis]) mapaRepresentados[idAsis] = [];
+            mapaRepresentados[idAsis].push(data.apto);
+        });
 
-            const votos = [];
-            const rondasSet = new Set();
+        const rondasSet = new Set();
+        const mapaVotosPorApto = {};
+        snapshotVotos.forEach(docSnap => {
+            const v = docSnap.data();
+            rondasSet.add(v.ronda);
+            if (!mapaVotosPorApto[String(v.apto)]) {
+                mapaVotosPorApto[String(v.apto)] = {};
+            }
+            mapaVotosPorApto[String(v.apto)][v.ronda] = v.opcion;
+        });
 
-            snapshotVotos.forEach(docSnap => {
-                const v = docSnap.data();
-                rondasSet.add(v.ronda);
-                votos.push(v);
-            });
+        const rondas = Array.from(rondasSet).sort((a, b) => a - b);
 
-            const rondas = Array.from(rondasSet).sort((a, b) => a - b);
+        let filas = [];
+        const encabezado = [
+            "Nombre",
+            "Apto Principal",
+            "Representados",
+            "Coeficiente",
+            ...rondas.map(r => `Ronda ${r}`)
+        ];
+        filas.push(encabezado.join(";"));
 
-            const mapa = {};
+        asistentes.forEach(asist => {
+            const idDocumento = asist.id; 
+            const nroApto = String(asist.apto);
 
-            votos.forEach(v => {
-                const apto = String(v.apto);
+            const listaRepresentados = mapaRepresentados[idDocumento] 
+                ? mapaRepresentados[idDocumento].join(" - ") 
+                : "";
 
-                const nombre = mapaAsistentes[apto] || "Sin nombre";
+            const susVotos = mapaVotosPorApto[nroApto] || {};
 
-                const key = `${nombre}-${apto}`;
-
-                if (!mapa[key]) {
-                    mapa[key] = {
-                        nombre,
-                        apto,
-                        coeficiente: v.coeficiente,
-                        respuestas: {}
-                    };
-                }
-
-                mapa[key].respuestas[v.ronda] = v.opcion;
-            });
-
-            let filas = [];
-
-            const encabezado = [
-                "Nombre",
-                "Apto",
-                "Coeficiente",
-                ...rondas.map(r => `Ronda ${r}`)
+            const fila = [
+                asist.nombre,
+                nroApto,
+                `"${listaRepresentados}"`, 
+                asist.coeficiente,
+                ...rondas.map(r => susVotos[r] || "-")
             ];
+            filas.push(fila.join(";"));
+        });
 
-            filas.push(encabezado);
+        const contenido = "\uFEFF" + filas.join("\n");
+        const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "acta_asamblea_completa.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-            Object.values(mapa).forEach(registro => {
-                const fila = [
-                    registro.nombre,
-                    registro.apto,
-                    registro.coeficiente,
-                    ...rondas.map(r => registro.respuestas[r] || "")
-                ];
-
-                filas.push(fila);
-            });
-
-            const contenido = "\uFEFF" + filas.map(f => f.join(";")).join("\n");
-
-            const blob = new Blob([contenido], {
-                type: "text/csv;charset=utf-8;"
-            });
-
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", "resultados_votacion.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-        } catch (error) {
-            console.error(error);
-            alert("Error al exportar CSV");
-        }
-    };
-
-
+    } catch (error) {
+        console.error("Error al exportar:", error);
+        alert("Error al generar el CSV");
+    }
+};
     return (
         <div className="admin-container">
             <h1 className="admin-title">Panel de Administración</h1>
-
             <div className="quorum-section">
                 <div className="quorum-card">
                     <h3>Coeficiente Presente</h3>
                     <div className="quorum-value">{totalCoeficiente.toFixed(2)}%</div>
                 </div>
             </div>
-
             <h3>👥 Registro de Asistentes ({asistentes.length})</h3>
             <div className="table-container">
                 <table className="admin-table">
@@ -284,21 +211,17 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
                     </thead>
                     <tbody>
                         {asistentes.map((a) => (
-                            <FilaAsistente
-                                key={a.id}
-                                asistente={a}
-                                todosLosAsistentes={asistentes}
-                            />
+                            <FilaAsistente key={a.id} asistente={a} todosLosAsistentes={asistentes} />
                         ))}
                     </tbody>
                 </table>
             </div>
-
             <button onClick={exportarCSV} className="btn btn-export">
-                📥 Descargar Acta de Resultados (CSV)
+                📥 Descargar Acta Completa (CSV)
             </button>
         </div>
     );
 }
 
-export default AdminPanel
+export default AdminPanel;
+
