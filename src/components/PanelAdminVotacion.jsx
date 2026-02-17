@@ -1,6 +1,6 @@
 import { db } from "/src/firebase.js";
 import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
-// import HistorialRondas from "../components/HistorialRondas";
+import HistorialRondas from "../components/HistorialRondas";
 import ModalNuevaPregunta from './ModalNuevaPrgunta';
 import { useState, useEffect } from "react";
 import "../styles/adminPanelVotacion.css"
