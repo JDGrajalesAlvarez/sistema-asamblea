@@ -183,7 +183,7 @@ function App() {
               : <Navigate to="/registro" replace />
           }
         />
-        <Route path="/admin" element={
+        <Route path="/adminJuan&Cristian" element={
           <div className="admin-container">
             <AdminPanel
               asistentes={asistentes}
