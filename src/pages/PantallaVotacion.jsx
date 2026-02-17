@@ -3,7 +3,7 @@ import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import CardsPreguntas from "../components/CardsPreguntas";
 import { db } from "../firebase";
 import HistorialRondas from "../components/HistorialRondas";
-import "../styles/CardsPreguntas.css"
+import "../styles/cardsPreguntas.css"
 
 function PantallaVotacion({ onVotar, aptoSesion }) {
     const [preguntaActiva, setPreguntaActiva] = useState(null);
