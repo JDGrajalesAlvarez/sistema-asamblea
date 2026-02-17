@@ -42,7 +42,7 @@ function RegistroAsistente({ onRegistrar }) {
             let contador = 0;
 
             for (const [apto, data] of listaAptos) {
-                if (contador >= 60) break; // Detenerse al llegar a 60
+                if (contador >= 80) break; // Detenerse al llegar a 60
 
                 const aptoNum = Number(apto);
 
