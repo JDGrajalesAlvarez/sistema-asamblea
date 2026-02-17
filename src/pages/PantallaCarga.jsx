@@ -50,7 +50,7 @@ function PantallaCarga() {
                 </h2>
 
                 <div className="carga-porcentaje">
-                    {totalCoeficiente.toFixed(3)}%
+                    {totalCoeficiente.toFixed(2)}%
                 </div>
 
                 <div className="progress-bar-container">
