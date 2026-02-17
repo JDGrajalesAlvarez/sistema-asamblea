@@ -184,11 +184,70 @@ const exportarCSV = async () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-    } catch (error) {
-        console.error("Error al exportar:", error);
-        alert("Error al generar el CSV");
-    }
-};
+        } catch (error) {
+            console.error(error);
+            alert("Error al exportar CSV");
+        }
+    };
+
+
+    // Comienzo del Script
+
+    const simularVotacionMasiva = async (rondaId) => {
+        console.log(`🗳️ Iniciando simulación de votos para la ronda: ${rondaId}...`);
+
+        try {
+            // 1. Obtener todos los asistentes registrados
+            const asistentesSnap = await getDocs(collection(db, "asistentes"));
+            const asistentes = asistentesSnap.docs.map(doc => ({
+                apto: doc.data().apto,
+                coeficiente: doc.data().coeficiente
+            }));
+
+            if (asistentes.length === 0) {
+                alert("No hay asistentes registrados para votar.");
+                return;
+            }
+
+            // 2. Obtener quienes ya votaron en esta ronda para no duplicar
+            const votosQuery = query(collection(db, "votacion"), where("ronda", "==", Number(rondaId)));
+            const votosSnap = await getDocs(votosQuery);
+            const aptosQueYaVotaron = votosSnap.docs.map(doc => doc.data().apto);
+
+            const opciones = ["si", "no"];
+            let votosRealizados = 0;
+
+            // 3. Registrar voto para cada asistente que no haya votado aún
+            for (const asistente of asistentes) {
+                if (!aptosQueYaVotaron.includes(asistente.apto)) {
+
+                    // Elegir opción aleatoria
+                    const opcionAleatoria = opciones[Math.floor(Math.random() * opciones.length)];
+
+                    await addDoc(collection(db, "votacion"), {
+                        apto: asistente.apto,
+                        coeficiente: asistente.coeficiente,
+                        opcion: opcionAleatoria,
+                        ronda: Number(rondaId),
+                        fecha: new Date()
+                    });
+
+                    votosRealizados++;
+                    console.log(`✅ Voto registrado: Apto ${asistente.apto} -> ${opcionAleatoria}`);
+                }
+            }
+
+            alert(`Simulación terminada: ${votosRealizados} nuevos votos registrados para la ronda ${rondaId}.`);
+        } catch (error) {
+            console.error("Error en la simulación:", error);
+            alert("Error al simular votos: " + error.message);
+        }
+    };
+
+
+    // Fin del Script
+
+
     return (
         <div className="admin-container">
             <h1 className="admin-title">Panel de Administración</h1>
@@ -217,8 +276,18 @@ const exportarCSV = async () => {
                 </table>
             </div>
             <button onClick={exportarCSV} className="btn btn-export">
-                📥 Descargar Acta Completa (CSV)
+                📥 Descargar Acta de Resultados (CSV)
             </button>
+
+            {/* Boton del Script */}
+
+            <button onClick={() => simularVotacionMasiva(rondaActual)} className="btn-admin" style={{ color: "black" }}>
+                🗳️ Simular Votos Ronda Actual
+            </button>
+
+            {/* Boton del Script */}
+
+
         </div>
     );
 }

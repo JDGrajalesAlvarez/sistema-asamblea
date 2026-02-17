@@ -11,6 +11,16 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
     const [votacionAbierta, setVotacionAbierta] = useState(false);
 
     useEffect(() => {
+
+        const cargarTextos = async () => {
+            const querySnapshot = await getDocs(collection(db, "preguntas"));
+            const textos = {};
+            querySnapshot.forEach(doc => {
+                textos[doc.id] = doc.data().texto;
+            });
+            setTextosPreguntas(textos);
+        };
+
         const unsubConfig = onSnapshot(
             doc(db, "configuracion", "estadoVotacion"),
             async (docSnap) => {
@@ -46,6 +56,7 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
                 }
 
                 setLoading(false);
+                cargarTextos();
             }
         );
 

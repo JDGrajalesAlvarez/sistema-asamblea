@@ -96,7 +96,7 @@ function HistorialRondas({ rondaActual }) {
                         );
                     })
                 ) : (
-                    <p className="no-data">No hay rondas finalizadas para mostrar.</p>
+                    <p className="no-data" >Esperando Respuestas.</p>
                 )}
             </div>
         </div>
