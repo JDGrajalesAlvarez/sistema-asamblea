@@ -114,75 +114,75 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
         return () => unsub();
     }, [rondaActual]);
 
-const exportarCSV = async () => {
-    try {
-        const [snapshotVotos, snapshotRepresentados] = await Promise.all([
-            getDocs(collection(db, "votacion")),
-            getDocs(collection(db, "asistente_apartamentos"))
-        ]);
+    const exportarCSV = async () => {
+        try {
+            const [snapshotVotos, snapshotRepresentados] = await Promise.all([
+                getDocs(collection(db, "votacion")),
+                getDocs(collection(db, "asistente_apartamentos"))
+            ]);
 
-        const mapaRepresentados = {};
-        snapshotRepresentados.forEach(docSnap => {
-            const data = docSnap.data();
-            const idAsis = data.asistenteId; 
-            if (!mapaRepresentados[idAsis]) mapaRepresentados[idAsis] = [];
-            mapaRepresentados[idAsis].push(data.apto);
-        });
+            const mapaRepresentados = {};
+            snapshotRepresentados.forEach(docSnap => {
+                const data = docSnap.data();
+                const idAsis = data.asistenteId;
+                if (!mapaRepresentados[idAsis]) mapaRepresentados[idAsis] = [];
+                mapaRepresentados[idAsis].push(data.apto);
+            });
 
-        const rondasSet = new Set();
-        const mapaVotosPorApto = {};
-        snapshotVotos.forEach(docSnap => {
-            const v = docSnap.data();
-            rondasSet.add(v.ronda);
-            if (!mapaVotosPorApto[String(v.apto)]) {
-                mapaVotosPorApto[String(v.apto)] = {};
-            }
-            mapaVotosPorApto[String(v.apto)][v.ronda] = v.opcion;
-        });
+            const rondasSet = new Set();
+            const mapaVotosPorApto = {};
+            snapshotVotos.forEach(docSnap => {
+                const v = docSnap.data();
+                rondasSet.add(v.ronda);
+                if (!mapaVotosPorApto[String(v.apto)]) {
+                    mapaVotosPorApto[String(v.apto)] = {};
+                }
+                mapaVotosPorApto[String(v.apto)][v.ronda] = v.opcion;
+            });
 
-        const rondas = Array.from(rondasSet).sort((a, b) => a - b);
+            const rondas = Array.from(rondasSet).sort((a, b) => a - b);
 
-        let filas = [];
-        const encabezado = [
-            "Nombre",
-            "Apto Principal",
-            "Representados",
-            "Coeficiente",
-            ...rondas.map(r => `Ronda ${r}`)
-        ];
-        filas.push(encabezado.join(";"));
-
-        asistentes.forEach(asist => {
-            const idDocumento = asist.id; 
-            const nroApto = String(asist.apto);
-
-            const listaRepresentados = mapaRepresentados[idDocumento] 
-                ? mapaRepresentados[idDocumento].join(" - ") 
-                : "";
-
-            const susVotos = mapaVotosPorApto[nroApto] || {};
-
-            const fila = [
-                asist.nombre,
-                nroApto,
-                `"${listaRepresentados}"`, 
-                asist.coeficiente,
-                ...rondas.map(r => susVotos[r] || "-")
+            let filas = [];
+            const encabezado = [
+                "Nombre",
+                "Apto Principal",
+                "Representados",
+                "T.Coeficiente",
+                ...rondas.map(r => `Ronda ${r}`)
             ];
-            filas.push(fila.join(";"));
-        });
+            filas.push(encabezado.join(";"));
 
-        const contenido = "\uFEFF" + filas.join("\n");
-        const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "acta_asamblea_completa.csv";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+            asistentes.forEach(asist => {
+                const idDocumento = asist.id;
+                const nroApto = String(asist.apto);
+
+                const listaRepresentados = mapaRepresentados[idDocumento]
+                    ? mapaRepresentados[idDocumento].join(" - ")
+                    : "";
+
+                const susVotos = mapaVotosPorApto[nroApto] || {};
+
+                const fila = [
+                    asist.nombre,
+                    nroApto,
+                    `"${listaRepresentados}"`,
+                    asist.coeficiente,
+                    ...rondas.map(r => susVotos[r] || "-")
+                ];
+                filas.push(fila.join(";"));
+            });
+
+            const contenido = "\uFEFF" + filas.join("\n");
+            const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "acta_asamblea.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
         } catch (error) {
             console.error(error);
