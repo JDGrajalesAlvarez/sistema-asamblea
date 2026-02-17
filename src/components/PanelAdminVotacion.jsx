@@ -134,9 +134,11 @@ function PanelAdminVotacion({ rondaActual, votacionActiva }) {
                 onSave={manejarGuardadoPregunta}
             />
 
-            <hr className="admin-divider" />
-
-            {/* <HistorialRondas /> */}
+            <div className="admin-container">
+                <section className="resultados-vivos">
+                    <HistorialRondas rondaActual={rondaActual} />
+                </section>
+            </div>
         </div>
     );
 }

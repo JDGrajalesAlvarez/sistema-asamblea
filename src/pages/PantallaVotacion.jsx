@@ -10,38 +10,17 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
     const [loading, setLoading] = useState(true);
     const [votacionAbierta, setVotacionAbierta] = useState(false);
 
-    // useEffect(() => {
-    //     const unsubConfig = onSnapshot(
-    //         doc(db, "configuracion", "estadoVotacion"),
-    //         async (docSnap) => {
-
-    //             if (docSnap.exists()) {
-    //                 const data = docSnap.data();
-    //                 const rondaActual = data.rondaActual;
-    //                 setVotacionAbierta(data.votacionActiva);
-
-    //                 if (rondaActual !== undefined && rondaActual !== null) {
-    //                     const preguntaRef = doc(db, "preguntas", String(rondaActual));
-    //                     const preguntaSnap = await getDoc(preguntaRef);
-
-    //                     if (preguntaSnap.exists()) {
-    //                         setPreguntaActiva({
-    //                             id: rondaActual,
-    //                             ...preguntaSnap.data()
-    //                         });
-    //                     } else {
-    //                         setPreguntaActiva(null);
-    //                     }
-    //                 }
-    //             }
-    //             setLoading(false);
-    //         });
-
-    //     return () => unsubConfig();
-    // }, []);
-
-
     useEffect(() => {
+
+        const cargarTextos = async () => {
+            const querySnapshot = await getDocs(collection(db, "preguntas"));
+            const textos = {};
+            querySnapshot.forEach(doc => {
+                textos[doc.id] = doc.data().texto;
+            });
+            setTextosPreguntas(textos);
+        };
+
         const unsubConfig = onSnapshot(
             doc(db, "configuracion", "estadoVotacion"),
             async (docSnap) => {
@@ -77,6 +56,7 @@ function PantallaVotacion({ onVotar, aptoSesion }) {
                 }
 
                 setLoading(false);
+                cargarTextos();
             }
         );
 
