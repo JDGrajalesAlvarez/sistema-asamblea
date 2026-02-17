@@ -1,6 +1,9 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import "../styles/Registro.css"
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
+import { apartamentos } from "../data/apartamentos";
 
 function RegistroAsistente({ onRegistrar }) {
     const [nombre, setNombre] = useState("")
@@ -21,6 +24,53 @@ function RegistroAsistente({ onRegistrar }) {
             navigate("/PantallaCarga")
         }
     }
+
+
+    // Comienzo del Script
+
+
+    const poblarAsistentesPrueba = async () => {
+        console.log("🚀 Iniciando registro masivo...");
+
+        try {
+            // 1. Obtener los ya registrados para evitar duplicados
+            const snapshot = await getDocs(collection(db, "asistentes"));
+            const registrados = snapshot.docs.map(doc => doc.data().apto);
+
+            // 2. Convertir el objeto de apartamentos en un array y tomar los primeros 60
+            const listaAptos = Object.entries(apartamentos);
+            let contador = 0;
+
+            for (const [apto, data] of listaAptos) {
+                if (contador >= 60) break; // Detenerse al llegar a 60
+
+                const aptoNum = Number(apto);
+
+                // 3. Si no está registrado, lo agregamos
+                if (!registrados.includes(aptoNum)) {
+                    await addDoc(collection(db, "asistentes"), {
+                        nombre: `Propietario Apto ${aptoNum}`,
+                        apto: aptoNum,
+                        coeficiente: data.coeficiente,
+                        fecha: new Date()
+                    });
+                    console.log(`✅ Registrado: ${aptoNum}`);
+                    contador++;
+                } else {
+                    console.log(`⚠️ Saltado (ya existe): ${aptoNum}`);
+                }
+            }
+
+            alert(`¡Éxito! Se registraron ${contador} nuevos asistentes.`);
+        } catch (error) {
+            console.error("Error en el registro masivo:", error);
+            alert("Error: " + error.message);
+        }
+    };
+
+
+    // Fin del Script
+
 
     return (
         <div className="contenedor">
@@ -49,6 +99,13 @@ function RegistroAsistente({ onRegistrar }) {
                     <button type="submit" className="button">
                         Registrar
                     </button>
+
+                    {/* // boton de script */}
+
+                    <button onClick={poblarAsistentesPrueba} style={{ background: "grey", color: "yellow", marginTop: "10px", fontSize: "15px" }}>⚙️ Generar 60 Asistentes de Prueba</button>
+
+                    {/* // boton de script */}
+
                 </form>
             </div>
         </div>
