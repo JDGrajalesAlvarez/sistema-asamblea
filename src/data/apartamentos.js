@@ -89,6 +89,6 @@ export const apartamentos = {
     1004: { metraje: 42.17, coeficiente: 1.26 },
     1005: { metraje: 42.17, coeficiente: 1.26 },
     1006: { metraje: 42.43, coeficiente: 1.27 },
-    1007: { metraje: 42.43, coeficiente: 1.27 },
+    // 1007: { metraje: 42.43, coeficiente: 1.27 }, Este apto no puede votar porrque no y ya
     1008: { metraje: 42.17, coeficiente: 1.26 },
 };

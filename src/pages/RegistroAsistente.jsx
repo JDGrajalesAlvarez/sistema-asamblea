@@ -29,44 +29,44 @@ function RegistroAsistente({ onRegistrar }) {
     // Comienzo del Script
 
 
-    const poblarAsistentesPrueba = async () => {
-        console.log("🚀 Iniciando registro masivo...");
+    // const poblarAsistentesPrueba = async () => {
+    //     console.log("🚀 Iniciando registro masivo...");
 
-        try {
-            // 1. Obtener los ya registrados para evitar duplicados
-            const snapshot = await getDocs(collection(db, "asistentes"));
-            const registrados = snapshot.docs.map(doc => doc.data().apto);
+    //     try {
+    //         // 1. Obtener los ya registrados para evitar duplicados
+    //         const snapshot = await getDocs(collection(db, "asistentes"));
+    //         const registrados = snapshot.docs.map(doc => doc.data().apto);
 
-            // 2. Convertir el objeto de apartamentos en un array y tomar los primeros 60
-            const listaAptos = Object.entries(apartamentos);
-            let contador = 0;
+    //         // 2. Convertir el objeto de apartamentos en un array y tomar los primeros 60
+    //         const listaAptos = Object.entries(apartamentos);
+    //         let contador = 0;
 
-            for (const [apto, data] of listaAptos) {
-                if (contador >= 80) break; // Detenerse al llegar a 60
+    //         for (const [apto, data] of listaAptos) {
+    //             if (contador >= 80) break; // Detenerse al llegar a 60
 
-                const aptoNum = Number(apto);
+    //             const aptoNum = Number(apto);
 
-                // 3. Si no está registrado, lo agregamos
-                if (!registrados.includes(aptoNum)) {
-                    await addDoc(collection(db, "asistentes"), {
-                        nombre: `Propietario Apto ${aptoNum}`,
-                        apto: aptoNum,
-                        coeficiente: data.coeficiente,
-                        fecha: new Date()
-                    });
-                    console.log(`✅ Registrado: ${aptoNum}`);
-                    contador++;
-                } else {
-                    console.log(`⚠️ Saltado (ya existe): ${aptoNum}`);
-                }
-            }
+    //             // 3. Si no está registrado, lo agregamos
+    //             if (!registrados.includes(aptoNum)) {
+    //                 await addDoc(collection(db, "asistentes"), {
+    //                     nombre: `Propietario Apto ${aptoNum}`,
+    //                     apto: aptoNum,
+    //                     coeficiente: data.coeficiente,
+    //                     fecha: new Date()
+    //                 });
+    //                 console.log(`✅ Registrado: ${aptoNum}`);
+    //                 contador++;
+    //             } else {
+    //                 console.log(`⚠️ Saltado (ya existe): ${aptoNum}`);
+    //             }
+    //         }
 
-            alert(`¡Éxito! Se registraron ${contador} nuevos asistentes.`);
-        } catch (error) {
-            console.error("Error en el registro masivo:", error);
-            alert("Error: " + error.message);
-        }
-    };
+    //         alert(`¡Éxito! Se registraron ${contador} nuevos asistentes.`);
+    //     } catch (error) {
+    //         console.error("Error en el registro masivo:", error);
+    //         alert("Error: " + error.message);
+    //     }
+    // };
 
 
     // Fin del Script
