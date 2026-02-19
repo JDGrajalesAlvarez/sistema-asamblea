@@ -102,7 +102,7 @@ function RegistroAsistente({ onRegistrar }) {
 
                     {/* // boton de script */}
 
-                    <button onClick={poblarAsistentesPrueba} style={{ background: "grey", color: "yellow", marginTop: "10px", fontSize: "15px" }}>⚙️ Generar 60 Asistentes de Prueba</button>
+                    {/* <button onClick={poblarAsistentesPrueba} style={{ background: "grey", color: "yellow", marginTop: "10px", fontSize: "15px" }}>⚙️ Generar 60 Asistentes de Prueba</button> */}
 
                     {/* // boton de script */}
 

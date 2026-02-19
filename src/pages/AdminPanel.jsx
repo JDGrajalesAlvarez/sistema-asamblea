@@ -281,9 +281,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
 
             {/* Boton del Script */}
 
-            <button onClick={() => simularVotacionMasiva(rondaActual)} className="btn-admin" style={{ color: "black" }}>
-                🗳️ Simular Votos Ronda Actual
-            </button>
+            {/* <button onClick={() => simularVotacionMasiva(rondaActual)} className="btn-admin" style={{ color: "black" }}> 🗳️ Simular Votos Ronda Actual </button> */}
 
             {/* Boton del Script */}
 
