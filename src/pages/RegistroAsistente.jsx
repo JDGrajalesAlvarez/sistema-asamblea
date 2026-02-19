@@ -26,7 +26,7 @@ function RegistroAsistente({ onRegistrar }) {
     }
 
 
-    // Comienzo del Script
+    // Comienzo del Script de registro de 80 aptos o asistencia
 
 
     // const poblarAsistentesPrueba = async () => {

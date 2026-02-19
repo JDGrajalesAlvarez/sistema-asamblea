@@ -191,7 +191,7 @@ function AdminPanel({ asistentes, totalCoeficiente, rondaActual }) {
     };
 
 
-    // Comienzo del Script
+    // Comienzo del Script de Votacion boton de comienzo script en la pagina de adminpanel
 
     // const simularVotacionMasiva = async (rondaId) => {
     //     console.log(`🗳️ Iniciando simulación de votos para la ronda: ${rondaId}...`);
