@@ -4,7 +4,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #964343;
+    /* background-color: #a77e7e; */
     /* fondo rosado */
     padding: 20px;
 }
@@ -13,7 +13,7 @@
 .qr-card {
     width: 100%;
     max-width: 500px;
-    background: #d64d4d;
+    background: #a77e7e;
     border-radius: 25px;
     padding: 40px 30px;
     text-align: center;
@@ -29,7 +29,7 @@
 /* Texto */
 .qr-description {
     margin-bottom: 30px;
-    color: #555;
+    /* color: #555; */
 }
 
 /* Contenedor del QR */
